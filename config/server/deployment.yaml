@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: l2sm-md-server
+  labels:
+    app: l2sm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: l2sm
+  template:
+    metadata:
+      labels:
+        app: l2sm
+    spec:
+      containers:
+      - name: l2sm-md-server-container
+        image: alexdecb/l2sm-md:0.1  
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 50051  
+        readinessProbe:  
+          httpGet:
+            path: /health
+            port: 50051
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:  # Ensures that the container is still running
+          httpGet:
+            path: /health
+            port: 50051
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---

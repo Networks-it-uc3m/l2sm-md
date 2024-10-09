@@ -1,0 +1,64 @@
+
+---
+apiVersion: v1
+data:
+  cluster1.yaml: |
+    apiVersion: v1
+    kind: Config
+    ...
+  cluster2.yaml: |
+    apiVersion: v1
+    kind: Config
+    ...
+kind: ConfigMap
+metadata:
+  name: l2smmd-kubeconfigs
+  namespace: l2sm-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: l2sm
+  name: l2smmd-service
+  namespace: l2sm-system
+spec:
+  ports:
+  - port: 50051
+    protocol: TCP
+    targetPort: 50051
+  selector:
+    app: l2sm
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: l2sm
+  name: l2smmd-server
+  namespace: l2sm-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: l2sm
+  template:
+    metadata:
+      labels:
+        app: l2sm
+    spec:
+      containers:
+      - image: alexdecb/l2sm-md:0.1
+        imagePullPolicy: IfNotPresent
+        name: server-container
+        ports:
+        - containerPort: 50051
+        volumeMounts:
+        - mountPath: /etc/l2sm/.kube/
+          name: kubeconfigs
+          readOnly: true
+      volumes:
+      - configMap:
+          name: l2smmd-kubeconfigs
+        name: kubeconfigs

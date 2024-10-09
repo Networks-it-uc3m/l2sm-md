@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: l2sm-md-server
+  name: server
   labels:
     app: l2sm
 spec:
@@ -29,8 +29,8 @@ spec:
         app: l2sm
     spec:
       containers:
-      - name: l2sm-md-server-container
-        image: alexdecb/l2sm-md:0.1  
+      - name: server-container
+        image: server
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 50051  
@@ -41,5 +41,5 @@ spec:
       volumes:
       - name: kubeconfigs
         configMap:
-          name: kubeconfigs  
+          name: l2smmd-kubeconfigs  
         

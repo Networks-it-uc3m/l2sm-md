@@ -9,34 +9,38 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/mdclient"
-	"github.com/Networks-it-uc3m/l2sm-md/pkg/pb"
+)
+
+const (
+	KUBECONFIGS_PATH = "/etc/l2sm/.kube/"
 )
 
 // server implements the L2SMMultiDomainServiceServer interface
 type server struct {
-	pb.UnimplementedL2SMMultiDomainServiceServer
+	l2smmd.UnimplementedL2SMMultiDomainServiceServer
 	mdclient.MDClient
 }
 
 // CreateNetwork calls a method from mdclient to create a network
-func (s *server) CreateNetwork(ctx context.Context, req *pb.CreateNetworkRequest) (*pb.CreateNetworkResponse, error) {
+func (s *server) CreateNetwork(ctx context.Context, req *l2smmd.CreateNetworkRequest) (*l2smmd.CreateNetworkResponse, error) {
 	err := s.MDClient.CreateNetwork(req.Network)
 	// Call the mdclient.CreateNetwork method (to be implemented later)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.CreateNetworkResponse{Message: "Network created successfully"}, nil
+	return &l2smmd.CreateNetworkResponse{Message: "Network created successfully"}, nil
 }
 
 // DeleteNetwork calls a method from mdclient to delete a network
-func (s *server) DeleteNetwork(ctx context.Context, req *pb.DeleteNetworkRequest) (*pb.DeleteNetworkResponse, error) {
+func (s *server) DeleteNetwork(ctx context.Context, req *l2smmd.DeleteNetworkRequest) (*l2smmd.DeleteNetworkResponse, error) {
 	// Call the mdclient.DeleteNetwork method (to be implemented later)
 	err := s.MDClient.DeleteNetwork(req.NetworkName)
 	if err != nil {
 		return nil, err
 	}
-	return &pb.DeleteNetworkResponse{Message: "Network deleted successfully"}, nil
+	return &l2smmd.DeleteNetworkResponse{Message: "Network deleted successfully"}, nil
 }
 
 func main() {
@@ -49,8 +53,10 @@ func main() {
 	// Create a new gRPC server
 	grpcServer := grpc.NewServer()
 
+	restConfigs := mdclient.GetRestConfigs(KUBECONFIGS_PATH)
+	restcli, _ := mdclient.NewClient(mdclient.RestType, restConfigs)
 	// Register the server with the gRPC server
-	pb.RegisterL2SMMultiDomainServiceServer(grpcServer, &server{})
+	l2smmd.RegisterL2SMMultiDomainServiceServer(grpcServer, &server{MDClient: restcli})
 
 	log.Printf("Server listening at %v", lis.Addr())
 

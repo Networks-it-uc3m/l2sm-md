@@ -9,19 +9,20 @@ import (
 
 	"google.golang.org/grpc"
 
-	"l2sm.local/l2sm-md/pkg/mdclient"
-	"l2sm.local/l2sm-md/pkg/pb"
+	"github.com/Networks-it-uc3m/l2sm-md/pkg/mdclient"
+	"github.com/Networks-it-uc3m/l2sm-md/pkg/pb"
 )
 
 // server implements the L2SMMultiDomainServiceServer interface
 type server struct {
 	pb.UnimplementedL2SMMultiDomainServiceServer
+	mdclient.MDClient
 }
 
 // CreateNetwork calls a method from mdclient to create a network
 func (s *server) CreateNetwork(ctx context.Context, req *pb.CreateNetworkRequest) (*pb.CreateNetworkResponse, error) {
+	err := s.MDClient.CreateNetwork(req.Network)
 	// Call the mdclient.CreateNetwork method (to be implemented later)
-	err := mdclient.CreateNetwork(req.Network)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +32,7 @@ func (s *server) CreateNetwork(ctx context.Context, req *pb.CreateNetworkRequest
 // DeleteNetwork calls a method from mdclient to delete a network
 func (s *server) DeleteNetwork(ctx context.Context, req *pb.DeleteNetworkRequest) (*pb.DeleteNetworkResponse, error) {
 	// Call the mdclient.DeleteNetwork method (to be implemented later)
-	err := mdclient.DeleteNetwork(req.NetworkName)
+	err := s.MDClient.DeleteNetwork(req.NetworkName)
 	if err != nil {
 		return nil, err
 	}

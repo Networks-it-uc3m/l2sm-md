@@ -1,9 +1,10 @@
-module l2sm.local/l2sm-md
+module github.com/Networks-it-uc3m/l2sm-md
 
 go 1.22.5
 
 require (
 	google.golang.org/grpc v1.67.0
+	github.com/Networks-it-uc3m/L2S-M v1.2.8
 	google.golang.org/protobuf v1.34.2
 )
 

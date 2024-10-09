@@ -93,6 +93,16 @@ $(KUSTOMIZE): $(LOCALBIN)
 .PHONY: dev
 dev:
 
+
+# Define file extensions for various formats
+FILES := $(shell find . -type f \( -name "*.go" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.md" \))
+
+# Install the addlicense tool if not installed
+.PHONY: install-tools
+install-tools:
+	@go install github.com/google/addlicense@latest
+
+
 .PHONY: add-license
 add-license: install-tools
 	@for file in $(FILES); do \

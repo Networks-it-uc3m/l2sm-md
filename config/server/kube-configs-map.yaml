@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeconfigs
+data:
+  cluster1.yaml: |
+    apiVersion: v1
+    kind: Config
+    ...
+  cluster2.yaml: |
+    apiVersion: v1
+    kind: Config
+    ...

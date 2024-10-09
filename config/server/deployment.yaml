@@ -20,16 +20,12 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 50051  
-        readinessProbe:  
-          httpGet:
-            path: /health
-            port: 50051
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:  # Ensures that the container is still running
-          httpGet:
-            path: /health
-            port: 50051
-          initialDelaySeconds: 5
-          periodSeconds: 10
----
+        volumeMounts:
+        - name: kubeconfigs
+          mountPath: "/etc/l2sm/.kube/"  # Mount the ConfigMap at this path
+          readOnly: true  # The ConfigMap should be read-only to prevent modification
+      volumes:
+      - name: kubeconfigs
+        configMap:
+          name: kubeconfigs  
+        

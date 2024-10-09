@@ -27,3 +27,37 @@ help: ## Display this help.
 .PHONY: generate-proto
 generate-proto: ## Generate gRPC code from .proto file.
 	protoc -I=api/v1 --go_out=paths=source_relative:./api/v1/l2smmd --go-grpc_out=paths=source_relative:./api/v1/l2smmd api/v1/l2smmd.proto
+
+.PHONY: run
+include .env
+export $(shell sed 's/=.*//' .env)
+run: # manifests generate fmt vet ## Run a controller from your host.
+	go run ./cmd/main.go
+
+.PHONY: build
+build: manifests generate fmt vet ## Build manager binary.
+	go build -o bin/manager cmd/main.go
+
+.PHONY: build-installer
+build-installer: kustomize ## Generate a consolidated YAML with CRDs and deployment.
+	echo "" > deployments/l2sm-deployment.yaml
+	echo "---" >> deployments/l2sm-deployment.yaml  # Add a document separator before appending
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default >> deployments/l2sm-deployment.yaml
+	$(KUSTOMIZE) build config/tmp >> deployments/l2sm-deployment.yaml
+
+.PHONY: deploy
+deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
+	$(KUSTOMIZE) build config/tmp | $(KUBECTL) apply -f -
+
+.PHONY: undeploy
+undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build config/tmp | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+
+.PHONY: kustomize
+kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
+$(KUSTOMIZE): $(LOCALBIN)
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))

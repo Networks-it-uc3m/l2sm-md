@@ -40,21 +40,18 @@ build: manifests generate fmt vet ## Build manager binary.
 
 .PHONY: build-installer
 build-installer: kustomize ## Generate a consolidated YAML with CRDs and deployment.
-	echo "" > deployments/l2sm-deployment.yaml
-	echo "---" >> deployments/l2sm-deployment.yaml  # Add a document separator before appending
+	echo "" > deployments/l2smmd-deployment.yaml
+	echo "---" >> deployments/l2smmd-deployment.yaml  # Add a document separator before appending
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default >> deployments/l2sm-deployment.yaml
-	$(KUSTOMIZE) build config/tmp >> deployments/l2sm-deployment.yaml
+	$(KUSTOMIZE) build config/default >> deployments/l2smmd-deployment.yaml
 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
-	$(KUSTOMIZE) build config/tmp | $(KUBECTL) apply -f -
 
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/tmp | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: kustomize

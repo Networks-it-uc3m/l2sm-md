@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package l2smmd;
 
-option go_package = "l2sm.local/l2sm-md/pkg/pb";
+option go_package = "github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd";
 
 message Provider {
     string name = 1;
@@ -12,7 +12,8 @@ message Provider {
 message L2Network {
     string name = 1;
     Provider provider = 2;
-    string pod_cidr = 3;  // Optional field for the pod CIDR
+    string pod_cidr = 3;  
+    string type = 4;
 }
 
 message CreateNetworkRequest {

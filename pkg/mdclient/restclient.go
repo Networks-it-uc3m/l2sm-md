@@ -28,8 +28,14 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network) error {
 
 	fmt.Printf("Creating network %s", network.GetName())
 
-	l2network, _ := restcli.ConstructL2NetworkFromL2smmd(network)
-	unstructuredL2network, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(l2network)
+	l2network, err := restcli.ConstructL2NetworkFromL2smmd(network)
+	if err != nil {
+		return fmt.Errorf("failed to construct l2network: %v", err)
+	}
+	unstructuredL2network, err := runtime.DefaultUnstructuredConverter.ToUnstructured(l2network)
+	if err != nil {
+		return fmt.Errorf("failed to assign unstructured l2network: %v", err)
+	}
 	unstructuredObj := &unstructured.Unstructured{Object: unstructuredL2network}
 
 	for _, clusterConfig := range restcli.ClusterConfigs {
@@ -94,16 +100,20 @@ func (restcli *RestClient) ConstructL2NetworkFromL2smmd(network *l2smmd.L2Networ
 	return l2network, nil
 }
 
-func GetRestConfigs(absKubeconfigDirectory string) []rest.Config {
+func GetRestConfigs(absKubeconfigDirectory string) ([]rest.Config, error) {
 	kubeFiles, err := os.ReadDir(absKubeconfigDirectory)
 	if err != nil {
-		fmt.Printf("Couldn't get kube config files. err: %s", err)
+		return []rest.Config{}, fmt.Errorf("couldn't get kube config files in %s: %v", absKubeconfigDirectory, err)
+
 	}
-	clusterConfigs := readKubernetesConfigs(absKubeconfigDirectory, kubeFiles)
-	return clusterConfigs
+	clusterConfigs, err := readKubernetesConfigs(absKubeconfigDirectory, kubeFiles)
+	if err != nil {
+		return []rest.Config{}, fmt.Errorf("failed to read configs in %s: %v", absKubeconfigDirectory, err)
+	}
+	return clusterConfigs, nil
 }
 
-func readKubernetesConfigs(absKubeconfigDirectory string, configDirectories []fs.DirEntry) []rest.Config {
+func readKubernetesConfigs(absKubeconfigDirectory string, configDirectories []fs.DirEntry) ([]rest.Config, error) {
 
 	var clusterConfigs []rest.Config
 
@@ -112,11 +122,11 @@ func readKubernetesConfigs(absKubeconfigDirectory string, configDirectories []fs
 		kubeconfig := filepath.Join(absKubeconfigDirectory, configEntry.Name())
 		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
-			panic(err.Error())
+			return []rest.Config{}, fmt.Errorf("failed to build config %s from flags: %v", configEntry.Name(), err)
 		}
 		clusterConfigs = append(clusterConfigs, *config)
 	}
 
-	return clusterConfigs
+	return clusterConfigs, nil
 
 }

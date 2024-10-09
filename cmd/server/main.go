@@ -53,8 +53,17 @@ func main() {
 	// Create a new gRPC server
 	grpcServer := grpc.NewServer()
 
-	restConfigs := mdclient.GetRestConfigs(KUBECONFIGS_PATH)
-	restcli, _ := mdclient.NewClient(mdclient.RestType, restConfigs)
+	restConfigs, err := mdclient.GetRestConfigs(KUBECONFIGS_PATH)
+	if err != nil {
+		log.Fatalf("Failed to get rest configs: %v", err)
+	}
+
+	restcli, err := mdclient.NewClient(mdclient.RestType, restConfigs)
+
+	if err != nil {
+		log.Fatalf("Failed to create multi domain client: %v", err)
+	}
+
 	// Register the server with the gRPC server
 	l2smmd.RegisterL2SMMultiDomainServiceServer(grpcServer, &server{MDClient: restcli})
 

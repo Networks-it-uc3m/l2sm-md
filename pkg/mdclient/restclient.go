@@ -10,6 +10,7 @@ import (
 
 	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
 	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
+	"github.com/Networks-it-uc3m/l2sm-md/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -75,13 +76,14 @@ func (restcli *RestClient) DeleteNetwork(network string) error {
 }
 
 func (restcli *RestClient) ConstructL2NetworkFromL2smmd(network *l2smmd.L2Network) (*l2smv1.L2Network, error) {
+
 	l2network := &l2smv1.L2Network{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      network.Name,
 			Namespace: restcli.Namespace,
 		},
 		Spec: l2smv1.L2NetworkSpec{
-			// Type:   l2smv1.NetworkType(network.Type),
+			Type:   l2smv1.NetworkType(utils.DefaultIfEmpty(network.Type, "vnet")),
 			Config: &network.PodCidr,
 			Provider: &l2smv1.ProviderSpec{
 				Name:   network.Provider.Name,

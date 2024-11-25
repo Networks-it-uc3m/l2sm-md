@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -52,9 +53,17 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network) error {
 	}
 	unstructuredObj := &unstructured.Unstructured{Object: unstructuredL2network}
 
-	for _, clusterConfig := range restcli.ClusterConfigs {
+	clusterCrts, err := GetClusterCertificates()
 
-		dynClient, err := dynamic.NewForConfig(&clusterConfig)
+	for _, cluster := range network.Clusters {
+
+		clusterConfig := &rest.Config{Host: cluster.RestConfig.ApiKey, BearerToken: cluster.RestConfig.BearerToken,
+			TLSClientConfig: rest.TLSClientConfig{
+				Insecure: false, // Set to true if self-signed certs are acceptable
+				CAData:   clusterCrts[cluster.Name],
+			},
+		}
+		dynClient, err := dynamic.NewForConfig(clusterConfig)
 		if err != nil {
 			return fmt.Errorf("Error contacting cluster %s: %v\n", clusterConfig.String(), err)
 		}
@@ -143,4 +152,31 @@ func readKubernetesConfigs(absKubeconfigDirectory string, configDirectories []fs
 
 	return clusterConfigs, nil
 
+}
+
+func GetClusterCertificates() (map[string][]byte, error) {
+
+	var clusterList map[string][]byte
+
+	// creates the in-cluster config
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return map[string][]byte{}, err
+	}
+	// creates the clientset
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return map[string][]byte{}, err
+	}
+
+	secrets, err := clientset.CoreV1().Secrets("").List(context.TODO(), metav1.ListOptions{LabelSelector: "l2sm-cert"})
+	if err != nil {
+		return map[string][]byte{}, err
+	}
+
+	for _, secret := range secrets.Items {
+		clusterList[secret.Labels["l2sm-cert"]] = secret.Data["cert-value"]
+	}
+
+	return clusterList, nil
 }

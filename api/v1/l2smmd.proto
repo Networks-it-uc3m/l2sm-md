@@ -14,6 +14,7 @@ message L2Network {
     Provider provider = 2;
     string pod_cidr = 3;  
     string type = 4;
+    repeated Cluster clusters = 5;
 }
 
 message CreateNetworkRequest {
@@ -23,11 +24,15 @@ message CreateNetworkRequest {
 message DeleteNetworkRequest {
     string network_name = 1;
 }
-
 message Cluster {
     string name = 1;
+    RestConfig rest_config = 2;
 }
 
+message RestConfig {
+    string bearer_token = 1;
+    string api_key = 2;
+}
 message Link {
     string endpointA = 1;
     string endpointB = 2;

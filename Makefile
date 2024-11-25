@@ -56,7 +56,8 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: generate-proto
-generate-proto: ## Generate gRPC code from .proto file.
+export PATH := $(PATH):$(LOCALBIN)
+generate-proto: install-tools ## Generate gRPC code from .proto file.
 	protoc -I=api/v1 --go_out=paths=source_relative:./api/v1/l2smmd --go-grpc_out=paths=source_relative:./api/v1/l2smmd api/v1/l2smmd.proto
 
 .PHONY: run
@@ -100,13 +101,15 @@ FILES := $(shell find . -type f \( -name "*.go" -o -name "*.json" -o -name "*.ya
 # Install the addlicense tool if not installed
 .PHONY: install-tools
 install-tools:
-	@go install github.com/google/addlicense@latest
+	GOBIN=$(LOCALBIN) go install github.com/google/addlicense@latest
+	GOBIN=$(LOCALBIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+	GOBIN=$(LOCALBIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 
 .PHONY: add-license
 add-license: install-tools
 	@for file in $(FILES); do \
-		addlicense -f ./hack/LICENSE.txt -l apache "$${file}"; \
+		$(LOCALBIN)/addlicense -f ./hack/LICENSE.txt -l apache "$${file}"; \
 	done
 
 

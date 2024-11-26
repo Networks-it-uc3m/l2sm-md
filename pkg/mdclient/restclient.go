@@ -55,6 +55,10 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network) error {
 
 	clusterCrts, err := GetClusterCertificates()
 
+	if err != nil {
+		return fmt.Errorf("could not get cluster certificates error: %v", err)
+	}
+
 	for _, cluster := range network.Clusters {
 
 		clusterConfig := &rest.Config{Host: cluster.RestConfig.ApiKey, BearerToken: cluster.RestConfig.BearerToken,
@@ -65,16 +69,15 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network) error {
 		}
 		dynClient, err := dynamic.NewForConfig(clusterConfig)
 		if err != nil {
-			return fmt.Errorf("Error contacting cluster %s: %v\n", clusterConfig.String(), err)
+			return fmt.Errorf("error contacting cluster %s: %v", clusterConfig.String(), err)
 		}
 		resource := l2smv1.GroupVersion.WithResource("l2networks")
 
 		_, err = dynClient.Resource(resource).Create(context.Background(), unstructuredObj, metav1.CreateOptions{})
 		if err != nil {
-			return fmt.Errorf("Error creating resource: %v\n", err)
+			return fmt.Errorf("error creating resource: %v", err)
 		}
 
-		return nil
 	}
 
 	return nil
@@ -88,16 +91,15 @@ func (restcli *RestClient) DeleteNetwork(network string) error {
 
 		dynClient, err := dynamic.NewForConfig(&clusterConfig)
 		if err != nil {
-			return fmt.Errorf("Error contacting cluster %s: %v\n", clusterConfig.String(), err)
+			return fmt.Errorf("error contacting cluster %s: %v", clusterConfig.String(), err)
 		}
 		resource := l2smv1.GroupVersion.WithResource("l2networks")
 
 		err = dynClient.Resource(resource).Namespace(restcli.Namespace).Delete(context.Background(), network, metav1.DeleteOptions{})
 		if err != nil {
-			return fmt.Errorf("Error creating resource: %v\n", err)
+			return fmt.Errorf("error creating resource: %v", err)
 		}
 
-		return nil
 	}
 
 	return nil
@@ -156,7 +158,7 @@ func readKubernetesConfigs(absKubeconfigDirectory string, configDirectories []fs
 
 func GetClusterCertificates() (map[string][]byte, error) {
 
-	var clusterList map[string][]byte
+	clusterList := make(map[string][]byte)
 
 	// creates the in-cluster config
 	config, err := rest.InClusterConfig()

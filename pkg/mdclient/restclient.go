@@ -24,12 +24,12 @@ import (
 
 	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
 	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
+	"github.com/Networks-it-uc3m/l2sm-md/pkg/operator"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -52,8 +52,13 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network) error {
 		return fmt.Errorf("failed to assign unstructured l2network: %v", err)
 	}
 	unstructuredObj := &unstructured.Unstructured{Object: unstructuredL2network}
+	// creates the in-cluster config
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return fmt.Errorf("could not create cluster config for control plane cluster: %v", err)
 
-	clusterCrts, err := GetClusterCertificates()
+	}
+	clusterCrts, err := operator.GetClusterCertificates(config)
 
 	if err != nil {
 		return fmt.Errorf("could not get cluster certificates error: %v", err)
@@ -154,31 +159,4 @@ func readKubernetesConfigs(absKubeconfigDirectory string, configDirectories []fs
 
 	return clusterConfigs, nil
 
-}
-
-func GetClusterCertificates() (map[string][]byte, error) {
-
-	clusterList := make(map[string][]byte)
-
-	// creates the in-cluster config
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return map[string][]byte{}, err
-	}
-	// creates the clientset
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return map[string][]byte{}, err
-	}
-
-	secrets, err := clientset.CoreV1().Secrets("").List(context.TODO(), metav1.ListOptions{LabelSelector: "l2sm-cert"})
-	if err != nil {
-		return map[string][]byte{}, err
-	}
-
-	for _, secret := range secrets.Items {
-		clusterList[secret.Labels["l2sm-cert"]] = secret.Data["cert-value"]
-	}
-
-	return clusterList, nil
 }

@@ -33,7 +33,10 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize-$(KUSTOMIZE_VERSION)
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_TOOLS_VERSION)
 ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
+KIND ?= kind
+DOCKER ?= docker 
 
+WORKER_CLUSTER_NUM ?= 3
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.14.0
@@ -63,12 +66,13 @@ generate-proto: install-tools ## Generate gRPC code from .proto file.
 .PHONY: run
 include .env
 export $(shell sed 's/=.*//' .env)
-run: # manifests generate fmt vet ## Run a controller from your host.
+run: 
 	go run ./cmd/main.go
 
 .PHONY: build
-build: manifests generate fmt vet ## Build manager binary.
-	go build -o bin/manager cmd/main.go
+build: fmt vet 
+	go build -o $(LOCALBIN)/server cmd/server/main.go
+	go build -o $(LOCALBIN)/apply-cert cmd/apply-cert/main.go
 
 .PHONY: build-installer
 build-installer: kustomize ## Generate a consolidated YAML with CRDs and deployment.
@@ -77,8 +81,17 @@ build-installer: kustomize ## Generate a consolidated YAML with CRDs and deploym
 	cd config/server && $(KUSTOMIZE) edit set image server=${IMG}
 	$(KUSTOMIZE) build config/default >> deployments/l2smmd-deployment.yaml
 
+.PHONY: fmt
+fmt: ## Run go fmt against code.
+	go fmt ./...
+
+.PHONY: vet
+vet: ## Run go vet against code.
+	go vet ./...
+
+
 .PHONY: deploy
-deploy: manifests kustomize ## Deploy server to the K8s cluster specified in ~/.kube/config.
+deploy: kustomize ## Deploy server to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image server=${IMG}
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 
@@ -113,6 +126,73 @@ add-license: install-tools
 	done
 
 
+CERT_FILES := $(shell find ./config/certs/ -name "*.key")
+
+.PHONY: apply-cert
+apply-cert: build
+	@if [ -n "$(CERT_FILES)" ]; then \
+		for file in $(CERT_FILES); do \
+			$(LOCALBIN)/apply-cert $${file}; \
+		done; \
+	else \
+		echo "No certificate files to process."; \
+	fi
+
+.PHONY: create-control-plane
+create-control-plane:
+	$(KIND) create cluster --config ./examples/quickstart/control-plane-cluster.yaml
+
+.PHONY: create-workers
+create-workers:
+	for number in $(shell seq 1 ${WORKER_CLUSTER_NUM}); do \
+		echo worker-cluster-$$number; \
+		$(KIND) create cluster --config ./examples/quickstart/worker-cluster.yaml --name worker-cluster-$$number; \
+		$(KUBECTL) config view -o jsonpath='{.clusters[?(@.name == "kind-worker-cluster-'$$number'")].cluster.certificate-authority-data}' --raw | base64 -d > config/certs/kind-worker-cluster-'$$number'.key; \
+	done
+
+.PHONY: add-cni
+add-cni:
+	@if [ ! -d "plugins/bin" ] || [ -z "$$(ls -A plugins/bin)" ]; then \
+		mkdir -p plugins/bin; \
+		wget -q https://github.com/containernetworking/plugins/releases/download/v1.6.0/cni-plugins-linux-amd64-v1.6.0.tgz; \
+		tar -xf cni-plugins-linux-amd64-v1.6.0.tgz -C plugins/bin; \
+		rm cni-plugins-linux-amd64-v1.6.0.tgz; \
+	fi
+	@nodes="$$( $(KIND) get nodes -A)"; \
+	if [ -z "$$nodes" ]; then \
+		echo "No nodes found. Is Kind running?"; \
+		exit 1; \
+	fi; \
+	for node in $$nodes; do \
+		echo "Copying plugins to node: $$node"; \
+		$(DOCKER) cp ./plugins/bin/. $$node:/opt/cni/bin; \
+		if [ $$? -ne 0 ]; then \
+			echo "Failed to copy plugins to $$node"; \
+			exit 1; \
+		fi; \
+		$(DOCKER) exec $$node modprobe br_netfilter; \
+		$(DOCKER) exec $$node sysctl -p /etc/sysctl.conf; \
+	done; \
+	clusters="$$( $(KIND) get clusters )"; \
+	if [ -z "$$clusters" ]; then \
+		echo "No clusters found. Is Kind running?"; \
+		exit 1; \
+	fi; \
+	for cluster in $$clusters; do \
+		$(KUBECTL) --context kind-$$cluster apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml; \
+		if [ $$? -ne 0 ]; then \
+			echo "Failed to install flannel in $$cluster"; \
+			exit 1; \
+		fi; \
+	done
+
+.PHONY: copy-to-container
+copy-to-container:
+	@if [ -z "$(container)" ]; then \
+		echo "Error: Please specify a container name using 'make copy-to-container container=<container_name>'"; \
+		exit 1; \
+	fi
+	docker cp ./plugins/bin/. $(container):/opt/cni/bin
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
 # $1 - target path with name of binary (ideally with version)
 # $2 - package url which can be installed

@@ -1,2 +1,3 @@
-config/kubeconfigs/*
 bin/
+config/certs/
+plugins/

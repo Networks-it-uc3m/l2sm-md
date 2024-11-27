@@ -6,6 +6,7 @@ require (
 	github.com/Networks-it-uc3m/L2S-M v1.2.8
 	google.golang.org/grpc v1.67.0
 	google.golang.org/protobuf v1.34.2
+	k8s.io/api v0.31.1
 	k8s.io/apimachinery v0.31.1
 )
 
@@ -38,7 +39,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.31.1 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect

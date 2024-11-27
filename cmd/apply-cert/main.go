@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -40,7 +39,7 @@ func main() {
 	}
 
 	// Read the certificate data from the file
-	certificate, err := ioutil.ReadFile(certificateFilePath)
+	certificate, err := os.ReadFile(certificateFilePath)
 	if err != nil {
 		fmt.Printf("Failed to read certificate file: %v\n", err)
 		os.Exit(1)

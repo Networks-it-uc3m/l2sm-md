@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go binary
-RUN go build -o server ./cmd/server/main.go
+RUN go build -o server ./cmd/server/
 
 # Stage 2: Create a minimal runtime environment
 FROM alpine:3.18

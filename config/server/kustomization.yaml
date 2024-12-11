@@ -15,10 +15,9 @@
 resources:
 - service.yaml
 - deployment.yaml
-- kube-configs-map.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 images:
 - name: server
   newName: alexdecb/l2sm-md
-  newTag: "0.1"
+  newTag: "0.2"

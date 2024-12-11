@@ -11,7 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: namespace
+    app.kubernetes.io/instance: system
+    app.kubernetes.io/component: manager
+    app.kubernetes.io/created-by: l2network
+    app.kubernetes.io/part-of: l2network
+    app.kubernetes.io/managed-by: kustomize
+  name: system
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,12 +46,4 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 50051  
-        volumeMounts:
-        - name: kubeconfigs
-          mountPath: "/etc/l2sm/.kube/"  # Mount the ConfigMap at this path
-          readOnly: true  # The ConfigMap should be read-only to prevent modification
-      volumes:
-      - name: kubeconfigs
-        configMap:
-          name: l2smmd-kubeconfigs  
         

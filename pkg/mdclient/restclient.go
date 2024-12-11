@@ -35,15 +35,15 @@ import (
 )
 
 type RestClient struct {
-	ClusterConfigs []rest.Config
-	Namespace      string
+	ManagerClusterConfig rest.Config
 }
 
-func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network) error {
+func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network, namespace string) error {
 
 	fmt.Printf("Creating network %s", network.GetName())
+	namespace = utils.DefaultIfEmpty(namespace, "default")
 
-	l2network, err := restcli.ConstructL2NetworkFromL2smmd(network)
+	l2network, err := l2sminterface.ConstructL2NetworkFromL2smmd(network)
 	if err != nil {
 		return fmt.Errorf("failed to construct l2network: %v", err)
 	}
@@ -76,9 +76,10 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network) error {
 		if err != nil {
 			return fmt.Errorf("error contacting cluster %s: %v", clusterConfig.String(), err)
 		}
-		resource := l2smv1.GroupVersion.WithResource("l2networks")
 
-		_, err = dynClient.Resource(resource).Create(context.Background(), unstructuredObj, metav1.CreateOptions{})
+		resource := l2sminterface.GetGVR(l2sminterface.L2Network)
+
+		_, err = dynClient.Resource(resource).Namespace(namespace).Create(context.Background(), unstructuredObj, metav1.CreateOptions{})
 		if err != nil {
 			return fmt.Errorf("error creating resource: %v", err)
 		}

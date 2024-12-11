@@ -1,5 +1,5 @@
 # Image URL to use for building/pushing
-IMG ?= alexdecb/l2sm-md:0.1
+IMG ?= alexdecb/l2sm-md:0.2
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.29.0
 
@@ -14,7 +14,7 @@ endif
 # Be aware that the target commands are only tested with Docker which is
 # scaffolded by default. However, you might want to replace it to use other
 # tools. (i.e. podman)
-CONTAINER_TOOL ?= sudo docker
+CONTAINER_TOOL ?= docker
 
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
@@ -36,13 +36,16 @@ GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
 KIND ?= kind
 DOCKER ?= docker 
 
-WORKER_CLUSTER_NUM ?= 3
+WORKER_CLUSTER_NUM ?= 2
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.14.0
 ENVTEST_VERSION ?= latest
 GOLANGCI_LINT_VERSION ?= v1.54.2
 ##@ Build and Push
+
+
+L2SMMD_NAMESPACE ?= default
 
 .PHONY: docker-build
 docker-build: ## Build docker image with the server.
@@ -67,12 +70,12 @@ generate-proto: install-tools ## Generate gRPC code from .proto file.
 include .env
 export $(shell sed 's/=.*//' .env)
 run: 
-	go run ./cmd/main.go
+	go run ./cmd/server
 
 .PHONY: build
 build: fmt vet 
-	go build -o $(LOCALBIN)/server cmd/server/main.go
-	go build -o $(LOCALBIN)/apply-cert cmd/apply-cert/main.go
+	go build -o $(LOCALBIN)/server ./cmd/server/
+	go build -o $(LOCALBIN)/apply-cert ./cmd/apply-cert/
 
 .PHONY: build-installer
 build-installer: kustomize ## Generate a consolidated YAML with CRDs and deployment.
@@ -92,21 +95,30 @@ vet: ## Run go vet against code.
 
 .PHONY: deploy
 deploy: kustomize ## Deploy server to the K8s cluster specified in ~/.kube/config.
-	cd config/manager && $(KUSTOMIZE) edit set image server=${IMG}
-	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
+	cd config/server && $(KUSTOMIZE) edit set image server=${IMG}
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f - 
 
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy server from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=true -f -
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
 	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
 
-.PHONY: dev
-dev:
+.PHONY: setup-dev
+setup-dev: create-control-plane create-workers add-cni install-l2sm 
+	$(KUBECTL) config use-context kind-control-plane
 
+.PHONY: deploy-dev
+deploy-dev: apply-cert kustomize
+	$(KUSTOMIZE) build config/dev | $(KUBECTL) apply -f - 
+	
+.PHONY: undeploy-dev
+undeploy-dev: kustomize ## Undeploy server from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+	$(KUSTOMIZE) build config/dev | $(KUBECTL) delete --ignore-not-found=true -f -
+	$(KUBECTL) delete secrets --all
 
 # Define file extensions for various formats
 FILES := $(shell find . -type f \( -name "*.go" -o -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.md" \))
@@ -132,7 +144,8 @@ CERT_FILES := $(shell find ./config/certs/ -name "*.key")
 apply-cert: build
 	@if [ -n "$(CERT_FILES)" ]; then \
 		for file in $(CERT_FILES); do \
-			$(LOCALBIN)/apply-cert $${file}; \
+			clustername=$$(basename $${file} .key); \
+			$(LOCALBIN)/apply-cert --namespace $(L2SMMD_NAMESPACE) --clustername $${clustername} $${file}; \
 		done; \
 	else \
 		echo "No certificate files to process."; \
@@ -145,9 +158,21 @@ create-control-plane:
 .PHONY: create-workers
 create-workers:
 	for number in $(shell seq 1 ${WORKER_CLUSTER_NUM}); do \
-		echo worker-cluster-$$number; \
 		$(KIND) create cluster --config ./examples/quickstart/worker-cluster.yaml --name worker-cluster-$$number; \
-		$(KUBECTL) config view -o jsonpath='{.clusters[?(@.name == "kind-worker-cluster-'$$number'")].cluster.certificate-authority-data}' --raw | base64 -d > config/certs/kind-worker-cluster-'$$number'.key; \
+		$(KUBECTL) config view -o jsonpath='{.clusters[?(@.name == "kind-worker-cluster-'$$number'")].cluster.certificate-authority-data}' --raw | base64 -d > config/certs/kind-worker-cluster-$$number.key; \
+	done
+
+.PHONY: install-l2sm
+install-l2sm:
+	for number in $(shell seq 1 ${WORKER_CLUSTER_NUM}); do \
+		$(KUBECTL) apply --context kind-worker-cluster-$$number -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.1/cert-manager.yaml; \
+		$(KUBECTL) apply --context kind-worker-cluster-$$number -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/master/deployments/multus-daemonset-thick.yml; \
+	done; \
+	for number in $(shell seq 1 ${WORKER_CLUSTER_NUM}); do \
+		$(KUBECTL) --context kind-worker-cluster-$$number wait --for=condition=Ready pods --all -A --timeout=300s; \
+	done; \
+	for number in $(shell seq 1 ${WORKER_CLUSTER_NUM}); do \
+		$(KUBECTL) --context kind-worker-cluster-$$number create -f https://github.com/Networks-it-uc3m/L2S-M/raw/refs/heads/main/deployments/l2sm-deployment.yaml; \
 	done
 
 .PHONY: add-cni
@@ -206,3 +231,8 @@ GOBIN=$(LOCALBIN) go install $${package} ;\
 mv "$$(echo "$(1)" | sed "s/-$(3)$$//")" $(1) ;\
 }
 endef
+
+
+.PHONY: clean
+clean:
+	$(KIND) delete clusters --all

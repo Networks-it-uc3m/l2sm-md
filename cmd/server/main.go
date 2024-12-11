@@ -17,45 +17,17 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net"
+	"path/filepath"
 
 	"google.golang.org/grpc"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 
 	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/mdclient"
 )
-
-const (
-	KUBECONFIGS_PATH = "/etc/l2sm/.kube/"
-)
-
-// server implements the L2SMMultiDomainServiceServer interface
-type server struct {
-	l2smmd.UnimplementedL2SMMultiDomainServiceServer
-	mdclient.MDClient
-}
-
-// CreateNetwork calls a method from mdclient to create a network
-func (s *server) CreateNetwork(ctx context.Context, req *l2smmd.CreateNetworkRequest) (*l2smmd.CreateNetworkResponse, error) {
-	err := s.MDClient.CreateNetwork(req.Network)
-	// Call the mdclient.CreateNetwork method (to be implemented later)
-	if err != nil {
-		return nil, err
-	}
-	return &l2smmd.CreateNetworkResponse{Message: "Network created successfully"}, nil
-}
-
-// DeleteNetwork calls a method from mdclient to delete a network
-func (s *server) DeleteNetwork(ctx context.Context, req *l2smmd.DeleteNetworkRequest) (*l2smmd.DeleteNetworkResponse, error) {
-	// Call the mdclient.DeleteNetwork method (to be implemented later)
-	err := s.MDClient.DeleteNetwork(req.NetworkName)
-	if err != nil {
-		return nil, err
-	}
-	return &l2smmd.DeleteNetworkResponse{Message: "Network deleted successfully"}, nil
-}
 
 func main() {
 	// Listen on port 50051
@@ -67,13 +39,17 @@ func main() {
 	// Create a new gRPC server
 	grpcServer := grpc.NewServer()
 
-	restConfigs, err := mdclient.GetRestConfigs(KUBECONFIGS_PATH)
+	config, err := clientcmd.BuildConfigFromFlags("", filepath.Join(homedir.HomeDir(), "Documentos", "l2sm", "l2sm-md", "kubeconfig"))
 	if err != nil {
-		log.Fatalf("Failed to get rest configs: %v", err)
+		panic(err)
 	}
 
-	restcli, err := mdclient.NewClient(mdclient.RestType, restConfigs)
+	// config, err := rest.InClusterConfig()
+	// if err != nil {
+	// 	panic(fmt.Errorf("could not create cluster config for control plane cluster: %v", err))
 
+	// }
+	restcli, err := mdclient.NewClient(mdclient.RestType, config)
 	if err != nil {
 		log.Fatalf("Failed to create multi domain client: %v", err)
 	}

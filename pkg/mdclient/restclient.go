@@ -88,46 +88,38 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network) error {
 	return nil
 }
 
-func (restcli *RestClient) DeleteNetwork(network string) error {
+func (restcli *RestClient) DeleteNetwork(network *l2smmd.L2Network, namespace string) error {
 
-	fmt.Printf("Deleting network %s", network)
+	clusterCrts, err := operator.GetClusterCertificates(&restcli.ManagerClusterConfig)
 
-	for _, clusterConfig := range restcli.ClusterConfigs {
+	if err != nil {
+		return fmt.Errorf("could not get cluster certificates error: %v", err)
+	}
 
-		dynClient, err := dynamic.NewForConfig(&clusterConfig)
+	fmt.Printf("Deleting network %s", network.Name)
+	namespace = utils.DefaultIfEmpty(namespace, "default")
+	for _, cluster := range network.Clusters {
+		clusterConfig := &rest.Config{Host: cluster.RestConfig.ApiKey, BearerToken: cluster.RestConfig.BearerToken,
+			TLSClientConfig: rest.TLSClientConfig{
+				Insecure: false, // Set to true if self-signed certs are acceptable
+				CAData:   clusterCrts[cluster.Name],
+			},
+		}
+		dynClient, err := dynamic.NewForConfig(clusterConfig)
 		if err != nil {
 			return fmt.Errorf("error contacting cluster %s: %v", clusterConfig.String(), err)
 		}
-		resource := l2smv1.GroupVersion.WithResource("l2networks")
+		resource := l2sminterface.GetGVR(l2sminterface.L2Network)
 
-		err = dynClient.Resource(resource).Namespace(restcli.Namespace).Delete(context.Background(), network, metav1.DeleteOptions{})
+		err = dynClient.Resource(resource).Namespace(namespace).Delete(context.Background(), network.Name, metav1.DeleteOptions{})
 		if err != nil {
-			return fmt.Errorf("error creating resource: %v", err)
+			return fmt.Errorf("error deleting resource: %v", err)
 		}
 
 	}
 
 	return nil
 
-}
-
-func (restcli *RestClient) ConstructL2NetworkFromL2smmd(network *l2smmd.L2Network) (*l2smv1.L2Network, error) {
-
-	l2network := &l2smv1.L2Network{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      network.Name,
-			Namespace: restcli.Namespace,
-		},
-		Spec: l2smv1.L2NetworkSpec{
-			Type:   l2smv1.NetworkType(utils.DefaultIfEmpty(network.Type, "vnet")),
-			Config: &network.PodCidr,
-			Provider: &l2smv1.ProviderSpec{
-				Name:   network.Provider.Name,
-				Domain: network.Provider.Domain,
-			},
-		},
-	}
-	return l2network, nil
 }
 
 func GetRestConfigs(absKubeconfigDirectory string) ([]rest.Config, error) {

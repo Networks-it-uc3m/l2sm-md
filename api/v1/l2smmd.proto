@@ -22,7 +22,8 @@ message CreateNetworkRequest {
 }
 
 message DeleteNetworkRequest {
-    string network_name = 1;
+    L2Network network = 1;
+    string namespace = 2;
 }
 message Cluster {
     string name = 1;

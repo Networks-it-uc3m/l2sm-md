@@ -22,8 +22,8 @@ import (
 
 	"context"
 
-	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
 	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
+	"github.com/Networks-it-uc3m/l2sm-md/pkg/l2sminterface"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/operator"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,19 +53,14 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network, namespace st
 	}
 	unstructuredObj := &unstructured.Unstructured{Object: unstructuredL2network}
 	// creates the in-cluster config
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return fmt.Errorf("could not create cluster config for control plane cluster: %v", err)
 
-	}
-	clusterCrts, err := operator.GetClusterCertificates(config)
+	clusterCrts, err := operator.GetClusterCertificates(&restcli.ManagerClusterConfig)
 
 	if err != nil {
 		return fmt.Errorf("could not get cluster certificates error: %v", err)
 	}
 
 	for _, cluster := range network.Clusters {
-
 		clusterConfig := &rest.Config{Host: cluster.RestConfig.ApiKey, BearerToken: cluster.RestConfig.BearerToken,
 			TLSClientConfig: rest.TLSClientConfig{
 				Insecure: false, // Set to true if self-signed certs are acceptable

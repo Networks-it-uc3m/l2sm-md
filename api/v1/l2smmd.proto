@@ -15,10 +15,13 @@ message L2Network {
     string pod_cidr = 3;  
     string type = 4;
     repeated Cluster clusters = 5;
+
+    
 }
 
 message CreateNetworkRequest {
     L2Network network = 1;
+    string namespace = 2;
 }
 
 message DeleteNetworkRequest {
@@ -28,6 +31,7 @@ message DeleteNetworkRequest {
 message Cluster {
     string name = 1;
     RestConfig rest_config = 2;
+    Overlay overlay = 3;
 }
 
 message RestConfig {
@@ -39,20 +43,27 @@ message Link {
     string endpointB = 2;
 }
 
-message OverlayTopology {
+message Overlay {
     Provider provider = 1;
+    repeated string nodes = 2;
+    repeated Link links = 3;
+}
+
+message Slice {
+    Provider provider =1;
     repeated Cluster clusters = 2;
     repeated Link links = 3;
 }
 
+
 message CreateOverlayRequest {
-    OverlayTopology overlay = 1;
+    Overlay overlay = 1;
 }
 
 message AddClusterRequest {
     string provider_name = 1;
     string provider_domain = 2;
-    string overlay_name = 3;
+    string slice_name = 3;
     Cluster cluster = 4;
 }
 

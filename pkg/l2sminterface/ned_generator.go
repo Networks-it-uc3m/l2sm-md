@@ -13,3 +13,72 @@
 // limitations under the License.
 
 package l2sminterface
+
+import (
+	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+type NEDValues struct {
+	NodeConfig NodeConfig
+	Neighbors  []Neighbor
+}
+
+type SDNController struct {
+	Name   string
+	Domain string
+}
+
+type NodeConfig struct {
+	NodeName  string
+	IPAddress string
+}
+
+type Neighbor struct {
+	Node   string
+	Domain string
+}
+
+type NEDGenerator struct {
+	SliceName string
+	Provider  SDNController
+}
+
+func NewNEDGenerator(sliceName string, providerDomain string) *NEDGenerator {
+	return &NEDGenerator{
+		SliceName: sliceName,
+		Provider: SDNController{
+			Name:   sliceName + "-controller",
+			Domain: providerDomain,
+		}}
+}
+func (nedGenerator *NEDGenerator) ConstructNED(nedValues NEDValues) *l2smv1.NetworkEdgeDevice {
+
+	neighbors := make([]l2smv1.NeighborSpec, len(nedValues.Neighbors))
+	for i := range neighbors {
+		neighbors[i].Node = nedValues.Neighbors[i].Node
+		neighbors[i].Domain = nedValues.Neighbors[i].Domain
+	}
+	ned := &l2smv1.NetworkEdgeDevice{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       GetKind(NetworkEdgeDevice),
+			APIVersion: l2smv1.GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nedGenerator.SliceName + "-ned",
+		},
+		Spec: l2smv1.NetworkEdgeDeviceSpec{
+			NetworkController: &l2smv1.NetworkControllerSpec{
+				Name:   nedGenerator.Provider.Name,
+				Domain: nedGenerator.Provider.Domain,
+			},
+			NodeConfig: &l2smv1.NodeConfigSpec{
+				NodeName:  nedValues.NodeConfig.NodeName,
+				IPAddress: nedValues.NodeConfig.IPAddress,
+			},
+			Neighbors: neighbors,
+		},
+	}
+	return ned
+
+}

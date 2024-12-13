@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-namespace: l2sm-system
+namespace: nemo-net
 
 # Value of this field is prepended to the
 # names of all resources, e.g. a deployment named
@@ -29,7 +29,8 @@ namePrefix: l2smmd-
 
 resources:
 - ../server
-
+- ../idcoprovider
+- ../interdomaindns
 # patches:
 # # Protect the /metrics endpoint by putting it behind auth.
 # # If you want your controller-manager to expose the /metrics

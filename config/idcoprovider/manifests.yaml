@@ -12,12 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resources:
-- service.yaml
-- deployment.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: server
-  newName: alexdecb/l2sm-md
-  newTag: "0.3"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: idcoprovider
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: idcoprovider
+  template:
+    metadata:
+      labels:
+        app: idcoprovider
+    spec:
+      hostNetwork: true
+      containers:
+      - name: idcoprovider
+        image: alexdecb/l2sm-controller:2.4
+        readinessProbe:
+          httpGet:
+            path: /onos/ui
+            port: 8181   
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        ports:
+        - containerPort: 6633
+        - containerPort: 8181
+        # imagePullPolicy: Always

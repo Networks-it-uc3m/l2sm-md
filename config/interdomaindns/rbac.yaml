@@ -12,12 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resources:
-- service.yaml
-- deployment.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: server
-  newName: alexdecb/l2sm-md
-  newTag: "0.3"
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: l2sm-dns-sa
+  namespace: default
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: coredns-config-editor
+  namespace: default
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "update"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: coredns-config-editor-binding
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: l2sm-dns-sa
+  namespace: default
+roleRef:
+  kind: Role
+  name: coredns-config-editor
+  apiGroup: rbac.authorization.k8s.io

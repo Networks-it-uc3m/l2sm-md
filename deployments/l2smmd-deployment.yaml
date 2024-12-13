@@ -25,7 +25,109 @@ metadata:
     app.kubernetes.io/name: namespace
     app.kubernetes.io/part-of: l2network
     control-plane: controller-manager
-  name: l2sm-system
+  name: nemo-net
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: l2smmd-l2sm-dns-sa
+  namespace: nemo-net
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: l2smmd-coredns-config-editor
+  namespace: nemo-net
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: l2smmd-coredns-config-editor-binding
+  namespace: nemo-net
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: l2smmd-coredns-config-editor
+subjects:
+- kind: ServiceAccount
+  name: l2smmd-l2sm-dns-sa
+  namespace: nemo-net
+---
+apiVersion: v1
+data:
+  Corefile: |
+    .:53 {
+        reload 5s
+        file /etc/coredns/zones/example.local.zone example.local
+        log
+        errors
+    }
+  example.local.zone: |
+    $TTL 3600
+    @   IN  SOA ns.example.local. admin.example.local. (
+        2024121201 ; serial
+        7200       ; refresh
+        3600       ; retry
+        1209600    ; expire
+        3600 )     ; minimum
+
+    @       IN  NS   ns.example.local.
+    ns      IN  A    10.0.0.10
+    # Additional records will be appended here by the updater container.
+kind: ConfigMap
+metadata:
+  name: l2smmd-coredns-config
+  namespace: nemo-net
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: l2smmd-coredns
+  namespace: nemo-net
+spec:
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+  - name: dns-tcp
+    port: 53
+    protocol: TCP
+  - name: updater
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: coredns
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: l2smmd-idcoprovider-service
+  namespace: nemo-net
+spec:
+  ports:
+  - name: of13-port
+    nodePort: 30011
+    port: 6633
+    protocol: TCP
+    targetPort: 6633
+  - name: http-port
+    nodePort: 30010
+    port: 8181
+    protocol: TCP
+    targetPort: 8181
+  selector:
+    app: idcoprovider
+  type: NodePort
 ---
 apiVersion: v1
 kind: Service
@@ -33,7 +135,7 @@ metadata:
   labels:
     app: l2sm
   name: l2smmd-service
-  namespace: l2sm-system
+  namespace: nemo-net
 spec:
   ports:
   - port: 50051
@@ -46,10 +148,79 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: l2smmd-coredns
+  namespace: nemo-net
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coredns
+  template:
+    metadata:
+      labels:
+        app: coredns
+    spec:
+      containers:
+      - args:
+        - -conf
+        - /etc/coredns/Corefile
+        image: coredns/coredns:1.10.1
+        name: coredns
+        ports:
+        - containerPort: 53
+          protocol: UDP
+        - containerPort: 53
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/coredns/
+          name: config-volume
+          readOnly: true
+      - image: alexdecb/l2sm-md:0.1
+        name: l2sm-dns
+        ports:
+        - containerPort: 8080
+      serviceAccountName: l2smmd-l2sm-dns-sa
+      volumes:
+      - configMap:
+          name: l2smmd-coredns-config
+        name: config-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: l2smmd-idcoprovider
+  namespace: nemo-net
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: idcoprovider
+  template:
+    metadata:
+      labels:
+        app: idcoprovider
+    spec:
+      containers:
+      - image: alexdecb/l2sm-controller:2.4
+        name: idcoprovider
+        ports:
+        - containerPort: 6633
+        - containerPort: 8181
+        readinessProbe:
+          httpGet:
+            path: /onos/ui
+            port: 8181
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      hostNetwork: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   labels:
     app: l2sm
   name: l2smmd-server
-  namespace: l2sm-system
+  namespace: nemo-net
 spec:
   replicas: 1
   selector:
@@ -61,16 +232,8 @@ spec:
         app: l2sm
     spec:
       containers:
-      - image: alexdecb/l2sm-md:0.2
+      - image: alexdecb/l2sm-md:0.3
         imagePullPolicy: IfNotPresent
         name: server-container
         ports:
         - containerPort: 50051
-        volumeMounts:
-        - mountPath: /etc/l2sm/.kube/
-          name: kubeconfigs
-          readOnly: true
-      volumes:
-      - configMap:
-          name: l2smmd-kubeconfigs
-        name: kubeconfigs

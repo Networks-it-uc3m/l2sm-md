@@ -9,38 +9,20 @@ message Provider {
     string domain = 2;
 }
 
-message L2Network {
-    string name = 1;
-    Provider provider = 2;
-    string pod_cidr = 3;  
-    string type = 4;
-    repeated Cluster clusters = 5;
-
-    
-}
-
-message CreateNetworkRequest {
-    L2Network network = 1;
-    string namespace = 2;
-}
-
-message DeleteNetworkRequest {
-    L2Network network = 1;
-    string namespace = 2;
-}
-message Cluster {
-    string name = 1;
-    RestConfig rest_config = 2;
-    Overlay overlay = 3;
+message Link {
+    string endpointA = 1;
+    string endpointB = 2;
 }
 
 message RestConfig {
     string bearer_token = 1;
     string api_key = 2;
 }
-message Link {
-    string endpointA = 1;
-    string endpointB = 2;
+
+message Cluster {
+    string name = 1;
+    RestConfig rest_config = 2;
+    Overlay overlay = 3;
 }
 
 message Overlay {
@@ -49,15 +31,65 @@ message Overlay {
     repeated Link links = 3;
 }
 
+message L2Network {
+    string name = 1;
+    Provider provider = 2;
+    string pod_cidr = 3;  
+    string type = 4;
+    repeated Cluster clusters = 5;
+}
+
 message Slice {
-    Provider provider =1;
+    Provider provider = 1;
     repeated Cluster clusters = 2;
     repeated Link links = 3;
 }
 
+// Requests and Responses for Network
+message CreateNetworkRequest {
+    L2Network network = 1;
+    string namespace = 2;
+}
 
+message CreateNetworkResponse {
+    string message = 1;
+}
+
+message DeleteNetworkRequest {
+    L2Network network = 1;
+    string namespace = 2;
+}
+
+message DeleteNetworkResponse {
+    string message = 1;
+}
+
+// Requests and Responses for Slice
+message CreateSliceRequest {
+    Slice slice = 1;
+    string namespace = 2;
+}
+
+message CreateSliceResponse {
+    string message = 1;
+}
+
+message DeleteSliceRequest {
+    Slice slice = 1;
+    string namespace = 2;
+}
+
+message DeleteSliceResponse {
+    string message = 1;
+}
+
+// Requests and Responses for Overlays (existing)
 message CreateOverlayRequest {
     Overlay overlay = 1;
+}
+
+message CreateOverlayResponse {
+    string message = 1;
 }
 
 message AddClusterRequest {
@@ -67,11 +99,19 @@ message AddClusterRequest {
     Cluster cluster = 4;
 }
 
+message AddClusterResponse {
+    string message = 1;
+}
+
 message RemoveClusterRequest {
     string provider_name = 1;
     string provider_domain = 2;
     string overlay_name = 3;
     string cluster_name = 4;
+}
+
+message RemoveClusterResponse {
+    string message = 1;
 }
 
 message DeleteOverlayRequest {
@@ -80,42 +120,23 @@ message DeleteOverlayRequest {
     string overlay_name = 3;
 }
 
-// Response messages for operations
-message CreateNetworkResponse {
-    string message = 1;
-}
-
-message DeleteNetworkResponse {
-    string message = 1;
-}
-
-message CreateOverlayResponse {
-    string message = 1;
-}
-
-message AddClusterResponse {
-    string message = 1;
-}
-
-message RemoveClusterResponse {
-    string message = 1;
-}
-
 message DeleteOverlayResponse {
     string message = 1;
 }
 
 // Service definition
-
 service L2SMMultiDomainService {
-    // Methods for network management
+    // Network management
     rpc CreateNetwork(CreateNetworkRequest) returns (CreateNetworkResponse);
     rpc DeleteNetwork(DeleteNetworkRequest) returns (DeleteNetworkResponse);
-    
-    // Methods for overlay topology management
+
+    // Slice management
+    rpc CreateSlice(CreateSliceRequest) returns (CreateSliceResponse);
+    rpc DeleteSlice(DeleteSliceRequest) returns (DeleteSliceResponse);
+
+    // Overlay topology management
     rpc CreateOverlay(CreateOverlayRequest) returns (CreateOverlayResponse);
     rpc AddCluster(AddClusterRequest) returns (AddClusterResponse);
     rpc RemoveCluster(RemoveClusterRequest) returns (RemoveClusterResponse);
     rpc DeleteOverlay(DeleteOverlayRequest) returns (DeleteOverlayResponse);
 }
-

@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	L2SMMultiDomainService_CreateNetwork_FullMethodName = "/l2smmd.L2SMMultiDomainService/CreateNetwork"
 	L2SMMultiDomainService_DeleteNetwork_FullMethodName = "/l2smmd.L2SMMultiDomainService/DeleteNetwork"
+	L2SMMultiDomainService_CreateSlice_FullMethodName   = "/l2smmd.L2SMMultiDomainService/CreateSlice"
+	L2SMMultiDomainService_DeleteSlice_FullMethodName   = "/l2smmd.L2SMMultiDomainService/DeleteSlice"
 	L2SMMultiDomainService_CreateOverlay_FullMethodName = "/l2smmd.L2SMMultiDomainService/CreateOverlay"
 	L2SMMultiDomainService_AddCluster_FullMethodName    = "/l2smmd.L2SMMultiDomainService/AddCluster"
 	L2SMMultiDomainService_RemoveCluster_FullMethodName = "/l2smmd.L2SMMultiDomainService/RemoveCluster"
@@ -30,11 +32,16 @@ const (
 // L2SMMultiDomainServiceClient is the client API for L2SMMultiDomainService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// Service definition
 type L2SMMultiDomainServiceClient interface {
-	// Methods for network management
+	// Network management
 	CreateNetwork(ctx context.Context, in *CreateNetworkRequest, opts ...grpc.CallOption) (*CreateNetworkResponse, error)
 	DeleteNetwork(ctx context.Context, in *DeleteNetworkRequest, opts ...grpc.CallOption) (*DeleteNetworkResponse, error)
-	// Methods for overlay topology management
+	// Slice management
+	CreateSlice(ctx context.Context, in *CreateSliceRequest, opts ...grpc.CallOption) (*CreateSliceResponse, error)
+	DeleteSlice(ctx context.Context, in *DeleteSliceRequest, opts ...grpc.CallOption) (*DeleteSliceResponse, error)
+	// Overlay topology management
 	CreateOverlay(ctx context.Context, in *CreateOverlayRequest, opts ...grpc.CallOption) (*CreateOverlayResponse, error)
 	AddCluster(ctx context.Context, in *AddClusterRequest, opts ...grpc.CallOption) (*AddClusterResponse, error)
 	RemoveCluster(ctx context.Context, in *RemoveClusterRequest, opts ...grpc.CallOption) (*RemoveClusterResponse, error)
@@ -63,6 +70,26 @@ func (c *l2SMMultiDomainServiceClient) DeleteNetwork(ctx context.Context, in *De
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeleteNetworkResponse)
 	err := c.cc.Invoke(ctx, L2SMMultiDomainService_DeleteNetwork_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *l2SMMultiDomainServiceClient) CreateSlice(ctx context.Context, in *CreateSliceRequest, opts ...grpc.CallOption) (*CreateSliceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateSliceResponse)
+	err := c.cc.Invoke(ctx, L2SMMultiDomainService_CreateSlice_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *l2SMMultiDomainServiceClient) DeleteSlice(ctx context.Context, in *DeleteSliceRequest, opts ...grpc.CallOption) (*DeleteSliceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteSliceResponse)
+	err := c.cc.Invoke(ctx, L2SMMultiDomainService_DeleteSlice_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,11 +139,16 @@ func (c *l2SMMultiDomainServiceClient) DeleteOverlay(ctx context.Context, in *De
 // L2SMMultiDomainServiceServer is the server API for L2SMMultiDomainService service.
 // All implementations must embed UnimplementedL2SMMultiDomainServiceServer
 // for forward compatibility.
+//
+// Service definition
 type L2SMMultiDomainServiceServer interface {
-	// Methods for network management
+	// Network management
 	CreateNetwork(context.Context, *CreateNetworkRequest) (*CreateNetworkResponse, error)
 	DeleteNetwork(context.Context, *DeleteNetworkRequest) (*DeleteNetworkResponse, error)
-	// Methods for overlay topology management
+	// Slice management
+	CreateSlice(context.Context, *CreateSliceRequest) (*CreateSliceResponse, error)
+	DeleteSlice(context.Context, *DeleteSliceRequest) (*DeleteSliceResponse, error)
+	// Overlay topology management
 	CreateOverlay(context.Context, *CreateOverlayRequest) (*CreateOverlayResponse, error)
 	AddCluster(context.Context, *AddClusterRequest) (*AddClusterResponse, error)
 	RemoveCluster(context.Context, *RemoveClusterRequest) (*RemoveClusterResponse, error)
@@ -136,6 +168,12 @@ func (UnimplementedL2SMMultiDomainServiceServer) CreateNetwork(context.Context, 
 }
 func (UnimplementedL2SMMultiDomainServiceServer) DeleteNetwork(context.Context, *DeleteNetworkRequest) (*DeleteNetworkResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteNetwork not implemented")
+}
+func (UnimplementedL2SMMultiDomainServiceServer) CreateSlice(context.Context, *CreateSliceRequest) (*CreateSliceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSlice not implemented")
+}
+func (UnimplementedL2SMMultiDomainServiceServer) DeleteSlice(context.Context, *DeleteSliceRequest) (*DeleteSliceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSlice not implemented")
 }
 func (UnimplementedL2SMMultiDomainServiceServer) CreateOverlay(context.Context, *CreateOverlayRequest) (*CreateOverlayResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateOverlay not implemented")
@@ -203,6 +241,42 @@ func _L2SMMultiDomainService_DeleteNetwork_Handler(srv interface{}, ctx context.
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(L2SMMultiDomainServiceServer).DeleteNetwork(ctx, req.(*DeleteNetworkRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _L2SMMultiDomainService_CreateSlice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSliceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(L2SMMultiDomainServiceServer).CreateSlice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: L2SMMultiDomainService_CreateSlice_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(L2SMMultiDomainServiceServer).CreateSlice(ctx, req.(*CreateSliceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _L2SMMultiDomainService_DeleteSlice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSliceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(L2SMMultiDomainServiceServer).DeleteSlice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: L2SMMultiDomainService_DeleteSlice_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(L2SMMultiDomainServiceServer).DeleteSlice(ctx, req.(*DeleteSliceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -293,6 +367,14 @@ var L2SMMultiDomainService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteNetwork",
 			Handler:    _L2SMMultiDomainService_DeleteNetwork_Handler,
+		},
+		{
+			MethodName: "CreateSlice",
+			Handler:    _L2SMMultiDomainService_CreateSlice_Handler,
+		},
+		{
+			MethodName: "DeleteSlice",
+			Handler:    _L2SMMultiDomainService_DeleteSlice_Handler,
 		},
 		{
 			MethodName: "CreateOverlay",

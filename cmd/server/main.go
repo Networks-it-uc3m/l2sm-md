@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 
 	"google.golang.org/grpc"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
@@ -39,16 +40,14 @@ func main() {
 	// Create a new gRPC server
 	grpcServer := grpc.NewServer()
 
-	config, err := clientcmd.BuildConfigFromFlags("", filepath.Join(homedir.HomeDir(), "Documentos", "l2sm", "l2sm-md", "kubeconfig"))
+	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err)
+		// If in-cluster config is not available, try the local kubeconfig
+		config, err = clientcmd.BuildConfigFromFlags("", filepath.Join(homedir.HomeDir(), "Documentos", "l2sm", "l2sm-md", "kubeconfig"))
+		if err != nil {
+			log.Fatalf("could not create config from either in-cluster or kubeconfig: %v", err)
+		}
 	}
-
-	// config, err := rest.InClusterConfig()
-	// if err != nil {
-	// 	panic(fmt.Errorf("could not create cluster config for control plane cluster: %v", err))
-
-	// }
 	restcli, err := mdclient.NewClient(mdclient.RestType, config)
 	if err != nil {
 		log.Fatalf("Failed to create multi domain client: %v", err)

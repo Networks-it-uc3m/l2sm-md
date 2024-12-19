@@ -22,7 +22,7 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: l2smmd-l2smmd-sa
+  name: l2smmd-server
   namespace: nemo-net
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -77,7 +77,7 @@ roleRef:
   name: l2smmd-secrets-reader
 subjects:
 - kind: ServiceAccount
-  name: l2smmd-l2smmd-sa
+  name: l2smmd-server
   namespace: nemo-net
 ---
 apiVersion: v1
@@ -251,8 +251,9 @@ spec:
         app: l2sm
     spec:
       containers:
-      - image: alexdecb/l2sm-md:0.3
+      - image: serverd
         imagePullPolicy: IfNotPresent
         name: server-container
         ports:
         - containerPort: 50051
+      serviceAccountName: l2smmd-server

@@ -42,8 +42,9 @@ spec:
     spec:
       containers:
       - name: server-container
-        image: server
+        image: serverd
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 50051  
-        
+      serviceAccountName: server
+

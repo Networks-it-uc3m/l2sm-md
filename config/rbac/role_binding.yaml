@@ -4,7 +4,7 @@ metadata:
   name: secrets-reader-binding
 subjects:
   - kind: ServiceAccount
-    name: l2smmd-sa
+    name: server
     namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io

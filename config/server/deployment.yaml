@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: server-container
-        image: alexdecb/l2smmd-server:0.3
+        image: alexdecb/l2sm-md:0.3
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 50051  

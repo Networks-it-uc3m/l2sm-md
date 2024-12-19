@@ -19,6 +19,12 @@ metadata:
   name: l2smmd-l2sm-dns-sa
   namespace: nemo-net
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: l2smmd-l2smmd-sa
+  namespace: nemo-net
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -34,6 +40,20 @@ rules:
   - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: l2smmd-secrets-reader
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: l2smmd-coredns-config-editor-binding
@@ -45,6 +65,19 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: l2smmd-l2sm-dns-sa
+  namespace: nemo-net
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: l2smmd-secrets-reader-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: l2smmd-secrets-reader
+subjects:
+- kind: ServiceAccount
+  name: l2smmd-l2smmd-sa
   namespace: nemo-net
 ---
 apiVersion: v1

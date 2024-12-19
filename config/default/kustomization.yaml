@@ -31,6 +31,7 @@ resources:
 - ../server
 - ../idcoprovider
 - ../interdomaindns
+- ../rbac
 # patches:
 # # Protect the /metrics endpoint by putting it behind auth.
 # # If you want your controller-manager to expose the /metrics

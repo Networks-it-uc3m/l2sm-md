@@ -1,0 +1,20 @@
+serverAddress: "localhost:30000"
+networkName: "ping-network"
+provider:
+  name: "test-slice"
+  domain: "172.20.0.2"
+
+clusters:
+  - name: "kind-worker-cluster-1"
+    apiKey: "https://172.20.0.3:6443"
+    bearerToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6InIa"
+    nodes:
+      - "worker-cluster-1-control-plane"
+
+  - name: "kind-worker-cluster-2"
+    apiKey: "https://172.20.0.4:6443"
+    bearerToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6In1XrdElr0N6F3bVFOBfVBkOFR3M0XN2MXpGaG1ycGc5b2YldfTTFOdH6NdWtjTUEfq.eyJhdWQiOiIsaHR0cHM6Ly9rdWJlcm5ldGVzL3NlcnZpY2VzIiwia3ViZXJuZXMiOiIjdXVjcm5hbnplIjpHRy5jbHVzdGVyLWNvbnRyb2x2d2FpdERlY292LW0lZI2pTWJMbG3VBR5bNR5ZWblmY29s-6yxZlwmfn2c8N2l5NrXYO7YV4IWuF5c3Wb2Fpbx5LdfZ0dn5J8TmMiYmQ3Y0pucDl2b21lZHR0cm5jb25zlV24IVZI1UOT3dYnxmZXJh5GELBZmQyV5cwlMblo6N5J5Mwc0p5XJKRnGtRDvxslLlLJ_qPAnwgU61fngqCOZAGKScgGv"
+    nodes:
+      - "worker-cluster-2-control-plane"
+networkType: "vnet"
+namespace: "default"

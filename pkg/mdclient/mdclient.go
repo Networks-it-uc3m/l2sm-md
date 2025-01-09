@@ -30,6 +30,8 @@ const (
 type MDClient interface {
 	CreateNetwork(network *l2smmd.L2Network, namespace string) error
 	DeleteNetwork(network *l2smmd.L2Network, namespace string) error
+	CreateSlice(slice *l2smmd.Slice, namespace string) error
+	DeleteSlice(slice *l2smmd.Slice, namespace string) error
 }
 
 func NewClient(clientType ClientType, config ...interface{}) (MDClient, error) {

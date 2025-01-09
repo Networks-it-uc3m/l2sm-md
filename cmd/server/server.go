@@ -47,3 +47,22 @@ func (s *server) DeleteNetwork(ctx context.Context, req *l2smmd.DeleteNetworkReq
 	}
 	return &l2smmd.DeleteNetworkResponse{Message: "Network deleted successfully"}, nil
 }
+
+func (s *server) CreateSlice(ctx context.Context, req *l2smmd.CreateSliceRequest) (*l2smmd.CreateSliceResponse, error) {
+	err := s.MDClient.CreateSlice(req.GetSlice(), req.GetNamespace())
+
+	if err != nil {
+		return nil, fmt.Errorf("could now create slice: %v", err)
+	}
+
+	return &l2smmd.CreateSliceResponse{Message: "Slice created succesfully"}, nil
+}
+
+func (s *server) DeleteSlice(ctx context.Context, req *l2smmd.DeleteSliceRequest) (*l2smmd.DeleteSliceResponse, error) {
+	// Call the mdclient.DeleteNetwork method (to be implemented later)
+	err := s.MDClient.DeleteSlice(req.GetSlice(), req.GetNamespace())
+	if err != nil {
+		return nil, fmt.Errorf("could not delete network: %v", err)
+	}
+	return &l2smmd.DeleteSliceResponse{Message: "Slice deleted successfully"}, nil
+}

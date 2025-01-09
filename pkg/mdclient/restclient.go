@@ -118,6 +118,83 @@ func (restcli *RestClient) DeleteNetwork(network *l2smmd.L2Network, namespace st
 
 }
 
+
+func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) error {
+
+	fmt.Printf("Creating slice %s", slice.GetProvider())
+
+	namespace = utils.DefaultIfEmpty(namespace, "default")
+
+	numClusters := len(slice.GetClusters())
+	overlaysMap := make(map[string]*unstructured.Unstructured,numClusters)
+	nedsMap := make(map[string]*unstructured.Unstructured,numClusters)
+
+	nedGenerator := l2sminterface.NewNEDGenerator(slice.GetProvider().GetName(),slice.GetProvider().GetDomain())
+
+	clusterNeighbors 
+	for _, cluster := range slice.GetClusters() {
+		overlay := l2sminterface.ConstructOverlayFromL2smmd(cluster.GetOverlay())
+		unstructuredOverlay, err := runtime.DefaultUnstructuredConverter.ToUnstructured(overlay)
+		if err != nil {
+			return fmt.Errorf("failed to assign unstructured l2network: %v", err)
+		}
+		overlaysMap[cluster.GetName()] = &unstructured.Unstructured{Object: unstructuredOverlay}
+
+		// clusterNeighbors := make([]l2sminterface.Neighbor,numClusters*(numClusters-1)/2)
+		clusterNeighbors := make([]l2sminterface.Neighbor,numClusters-1)
+		for 
+		nedGenerator.ConstructNED(l2sminterface.NEDValues{
+										l2sminterface.NodeConfig{NodeName: cluster.GetGatewayNode().GetName(),IPAddress: cluster.GetGatewayNode().GetIpAddress()},
+										l2sminterface.Neighbors: neighbors})
+		unstructuredOverlay, err := runtime.DefaultUnstructuredConverter.ToUnstructured(overlay)
+		if err != nil {
+			return fmt.Errorf("failed to assign unstructured l2network: %v", err)
+		}
+		overlaysMap[cluster.GetName()] = &unstructured.Unstructured{Object: unstructuredOverlay}
+	}
+	if err != nil {
+		return fmt.Errorf("failed to construct l2network: %v", err)
+	}
+	unstructuredL2network, err := runtime.DefaultUnstructuredConverter.ToUnstructured(l2network)
+	if err != nil {
+		return fmt.Errorf("failed to assign unstructured l2network: %v", err)
+	}
+	unstructuredObj := &unstructured.Unstructured{Object: unstructuredL2network}
+	// creates the in-cluster config
+
+	clusterCrts, err := operator.GetClusterCertificates(&restcli.ManagerClusterConfig)
+
+	if err != nil {
+		return fmt.Errorf("could not get cluster certificates error: %v", err)
+	}
+
+	for _, cluster := range network.Clusters {
+		clusterConfig := &rest.Config{Host: cluster.RestConfig.ApiKey, BearerToken: cluster.RestConfig.BearerToken,
+			TLSClientConfig: rest.TLSClientConfig{
+				Insecure: false, // Set to true if self-signed certs are acceptable
+				CAData:   clusterCrts[cluster.Name],
+			},
+		}
+		dynClient, err := dynamic.NewForConfig(clusterConfig)
+		if err != nil {
+			return fmt.Errorf("error contacting cluster %s: %v", clusterConfig.String(), err)
+		}
+
+		resource := l2sminterface.GetGVR(l2sminterface.L2Network)
+
+		_, err = dynClient.Resource(resource).Namespace(namespace).Create(context.Background(), unstructuredObj, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("error creating resource: %v", err)
+		}
+
+	}
+
+	return nil
+}
+func (restcli *RestClient) DeleteSlice(slice *l2smmd.Slice, namespace string) error {
+	return nil
+}
+
 func GetRestConfigs(absKubeconfigDirectory string) ([]rest.Config, error) {
 	kubeFiles, err := os.ReadDir(absKubeconfigDirectory)
 	if err != nil {

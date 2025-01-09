@@ -14,6 +14,10 @@ message Link {
     string endpointB = 2;
 }
 
+message Node {
+    string name = 1;
+    string ip_address = 2;
+}
 message RestConfig {
     string bearer_token = 1;
     string api_key = 2;
@@ -23,6 +27,7 @@ message Cluster {
     string name = 1;
     RestConfig rest_config = 2;
     Overlay overlay = 3;
+    Node gateway_node = 4;
 }
 
 message Overlay {

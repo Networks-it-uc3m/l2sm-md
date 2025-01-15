@@ -1,20 +1,34 @@
-serverAddress: "localhost:30000"
+# Address of your gRPC server
+serverAddress: "localhost:50051"
+
+# An example L2Network name if you're testing network creation
 networkName: "ping-network"
+
+# Provider information for both Network and Slice
 provider:
   name: "test-slice"
   domain: "172.20.0.2"
 
+# Type of network you want to create
+networkType: "vnet"
+
+# Default namespace to place your L2SM resources in
+namespace: "l2sm-system"
+# List of clusters that belong to this network or slice
 clusters:
   - name: "kind-worker-cluster-1"
     apiKey: "https://172.20.0.3:6443"
-    bearerToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6InIa"
+    bearerToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6Ii1ZM0lvWkRvNUdBb08wX1N2bF9tOEV6MEk5MlVOMkNhTjVvU2xvRVNZNTAifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNzM2OTc2MjYxLCJpYXQiOjE3MzY5NzI2NjEsImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJsMnNtLXN5c3RlbSIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJsMnNtLWNvbnRyb2xsZXItbWFuYWdlciIsInVpZCI6IjhjYTk2ODUxLTRiODgtNGJkMS05MTRhLTdiZmU5MTY1NGQ2OCJ9fSwibmJmIjoxNzM2OTcyNjYxLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6bDJzbS1zeXN0ZW06bDJzbS1jb250cm9sbGVyLW1hbmFnZXIifQ.mVTTTVhA9n-2OJVeBDzjimK8DQGVx95n3ASqvrinllkKNVbFXlfaHyksXQ-A9hMZ5bbiKpEkuDM6LaSA7VPJWuGev600ID5ad_8e2ax2FUZl_qCY7oQ2j_PBdOhZh2m3Lh2cf49GInkK3jBjRRMIEpZWiQpoHqfeFwSntH_-gQS7IwB9gbxM3yn9LMpglPAeTTS7shcftpiPV-n-mm7X7kU3Hvx8EbDlX4YE7yHaSaRGTqSJtHbx2WXwx5JbUa1WzjDoWYTsx3eiuko8_gSgl4g5gzP7gSABT3jIO6KHPzekv2vpzoigpzDM6lbu73k-dqG57Bxt1PZW1w3nlrw-SQ"
     nodes:
       - "worker-cluster-1-control-plane"
-
+    gatewayNode:
+      name: "worker-cluster-1-control-plane"
+      ipAddress: "172.20.0.3"
   - name: "kind-worker-cluster-2"
     apiKey: "https://172.20.0.4:6443"
-    bearerToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6In1XrdElr0N6F3bVFOBfVBkOFR3M0XN2MXpGaG1ycGc5b2YldfTTFOdH6NdWtjTUEfq.eyJhdWQiOiIsaHR0cHM6Ly9rdWJlcm5ldGVzL3NlcnZpY2VzIiwia3ViZXJuZXMiOiIjdXVjcm5hbnplIjpHRy5jbHVzdGVyLWNvbnRyb2x2d2FpdERlY292LW0lZI2pTWJMbG3VBR5bNR5ZWblmY29s-6yxZlwmfn2c8N2l5NrXYO7YV4IWuF5c3Wb2Fpbx5LdfZ0dn5J8TmMiYmQ3Y0pucDl2b21lZHR0cm5jb25zlV24IVZI1UOT3dYnxmZXJh5GELBZmQyV5cwlMblo6N5J5Mwc0p5XJKRnGtRDvxslLlLJ_qPAnwgU61fngqCOZAGKScgGv"
+    bearerToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IlpoUE92YkQwQTQ2T1k3cXFKa0NxZ2ZoNF9ScW4yYTJkNnQwVmd4TWJObDgifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNzM2OTc2MjQ2LCJpYXQiOjE3MzY5NzI2NDYsImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJsMnNtLXN5c3RlbSIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJsMnNtLWNvbnRyb2xsZXItbWFuYWdlciIsInVpZCI6ImY4NzJmMDE4LTRhYTktNGYzYS1hMjIyLTVmMGY0ZDUwOWRmNyJ9fSwibmJmIjoxNzM2OTcyNjQ2LCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6bDJzbS1zeXN0ZW06bDJzbS1jb250cm9sbGVyLW1hbmFnZXIifQ.FmAWuWtEj1eDBxl3YnERmgYaFVb7MmLTgnFGdz1Oy07NbOOw6TvS27RJjxQcuzxADlp-NNBAWGymN8C7ws6n6-9PTI0_IVDsxUlRg1Gw17RP4LbyaVh50T3Bv8a4iejUjINPvd8fyeGqwv4sdhJ6K7MAz52j9xps18Vu6iltYGeqiBG3GqR4Ylk2BZwlgRKYOjAhIKNzLhZcXS3fVvHSlLDZwLr7VMFVRMwn5iBJpQI_v3MmOZXCrB3GmuAZL520QwoNgjmZBj92vLzhhsFbGTkvVRi8bbDbJEpeZPIiPumcQcallXC8ibCZvZ7pnuPEnOj61Xu8NcTwntqXQw1Wig"
     nodes:
       - "worker-cluster-2-control-plane"
-networkType: "vnet"
-namespace: "default"
+    gatewayNode:
+      name: "worker-cluster-2-control-plane"
+      ipAddress: "172.20.0.4"

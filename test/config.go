@@ -22,10 +22,16 @@ type ProviderConfig struct {
 }
 
 type ClusterConfig struct {
-	Name        string   `yaml:"name"`
-	ApiKey      string   `yaml:"apiKey"`
-	BearerToken string   `yaml:"bearerToken"`
-	Nodes       []string `yaml:"nodes"`
+	Name        string     `yaml:"name"`
+	ApiKey      string     `yaml:"apiKey"`
+	BearerToken string     `yaml:"bearerToken"`
+	Nodes       []string   `yaml:"nodes"`
+	GatewayNode NodeConfig `yaml:"gatewayNode"`
+}
+
+type NodeConfig struct {
+	Name      string `yaml:"name"`
+	IPAddress string `yaml:"ipAddress"`
 }
 
 func LoadConfig(path string) (*Config, error) {

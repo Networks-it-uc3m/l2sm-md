@@ -1,5 +1,5 @@
 # Image URL to use for building/pushing
-IMG ?= alexdecb/l2sm-md:0.2
+IMG ?= alexdecb/l2sm-md:0.3
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.29.0
 
@@ -106,13 +106,24 @@ undeploy: kustomize ## Undeploy server from the K8s cluster specified in ~/.kube
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
 	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
-
 .PHONY: setup-dev
-setup-dev: create-control-plane create-workers add-cni install-l2sm 
-	$(KUBECTL) config use-context kind-control-plane
+setup-dev: create-control-plane create-workers add-cni install-l2sm deploy-dev
+	@echo "Development environment successfully set up."
+
+.PHONY: create-control-plane
+create-control-plane:
+	$(KIND) create cluster --config ./examples/quickstart/control-plane-cluster.yaml
+
+.PHONY: create-workers
+create-workers:
+	for number in $(shell seq 1 ${WORKER_CLUSTER_NUM}); do \
+		$(KIND) create cluster --config ./examples/quickstart/worker-cluster.yaml --name worker-cluster-$$number; \
+		$(KUBECTL) config view -o jsonpath='{.clusters[?(@.name == "kind-worker-cluster-'$$number'")].cluster.certificate-authority-data}' --raw | base64 -d > config/certs/kind-worker-cluster-$$number.key; \
+	done
 
 .PHONY: deploy-dev
 deploy-dev: apply-cert kustomize
+	$(KUBECTL) config use-context kind-control-plane
 	$(KUSTOMIZE) build config/dev | $(KUBECTL) apply -f - 
 	
 .PHONY: undeploy-dev
@@ -142,6 +153,7 @@ CERT_FILES := $(shell find ./config/certs/ -name "*.key")
 
 .PHONY: apply-cert
 apply-cert: build
+	$(KUBECTL) config use-context kind-control-plane
 	@if [ -n "$(CERT_FILES)" ]; then \
 		for file in $(CERT_FILES); do \
 			clustername=$$(basename $${file} .key); \
@@ -151,16 +163,6 @@ apply-cert: build
 		echo "No certificate files to process."; \
 	fi
 
-.PHONY: create-control-plane
-create-control-plane:
-	$(KIND) create cluster --config ./examples/quickstart/control-plane-cluster.yaml
-
-.PHONY: create-workers
-create-workers:
-	for number in $(shell seq 1 ${WORKER_CLUSTER_NUM}); do \
-		$(KIND) create cluster --config ./examples/quickstart/worker-cluster.yaml --name worker-cluster-$$number; \
-		$(KUBECTL) config view -o jsonpath='{.clusters[?(@.name == "kind-worker-cluster-'$$number'")].cluster.certificate-authority-data}' --raw | base64 -d > config/certs/kind-worker-cluster-$$number.key; \
-	done
 
 .PHONY: install-l2sm
 install-l2sm:
@@ -210,6 +212,10 @@ add-cni:
 			exit 1; \
 		fi; \
 	done
+
+.PHONY: connect-clusters
+connect-clusters:
+	
 
 .PHONY: copy-to-container
 copy-to-container:

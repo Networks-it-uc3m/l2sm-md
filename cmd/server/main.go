@@ -43,7 +43,7 @@ func main() {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		// If in-cluster config is not available, try the local kubeconfig
-		config, err = clientcmd.BuildConfigFromFlags("", filepath.Join(homedir.HomeDir(), "Documentos", "l2sm", "l2sm-md", "kubeconfig"))
+		config, err = clientcmd.BuildConfigFromFlags("", filepath.Join(homedir.HomeDir(), ".kube", "config"))
 		if err != nil {
 			log.Fatalf("could not create config from either in-cluster or kubeconfig: %v", err)
 		}

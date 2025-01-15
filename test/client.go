@@ -14,16 +14,13 @@
 
 // client.go
 //
-// This is a simple client that interacts with the given gRPC server to create and delete a network.
-// We assume that the server is running on localhost:50051.
+// This is a simple client that interacts with the given gRPC server to create or delete
+// a network or a slice resource based on command-line flags. We assume the server is
+// running on "localhost:50051" or another address specified in the YAML config.
 //
-// Note: Ensure that you have the appropriate generated gRPC code and protos accessible and correctly imported.
-// The imports to "github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd" and gRPC libraries are illustrative.
-//
-// Usage:
-//   go run client.go
-//
-// It will create a network with the specified constants and then delete it.
+// Usage examples (assuming you have Go modules set up):
+//   go run client.go --test-slice-create --config ./config.yaml
+//   go run client.go --test-network-create --config ./config.yaml
 
 package main
 
@@ -34,33 +31,35 @@ import (
 	"log"
 	"time"
 
-	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	// Adjust import to point to where you keep your proto-generated code
+	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
 )
 
+// main is the entry point for this client application
 func main() {
-	// Set up a connection to the gRPC server.
+	// Command-line flags
+	testNetworkCreate := flag.Bool("test-network-create", false, "Simulate creating a network resource")
+	testNetworkDelete := flag.Bool("test-network-delete", false, "Simulate deleting a network resource")
+	testSliceCreate := flag.Bool("test-slice-create", false, "Simulate creating a slice resource")
+	testSliceDelete := flag.Bool("test-slice-delete", false, "Simulate deleting a slice resource")
 
-	// Define a boolean flag for test slice creation
-	testNetworkCreate := flag.Bool("test-network-create", false, "Simulate the creation and deployment of network resources")
-	testSliceCreate := flag.Bool("test-slice-create", false, "Simulate the creation and deployment of slice resources")
-	testSliceDelete := flag.Bool("test-slice-delete", false, "Simulate the deletion of slice resources")
-	testNetworkDelete := flag.Bool("test-network-delete", false, "Simulate the deletion of network resources")
-	configPath := flag.String("config", "./config.yaml", "path to config file")
+	configPath := flag.String("config", "./config.yaml", "Path to YAML config file")
+	namespace := flag.String("namespace", "l2sm-system", "Kubernetes namespace to place resources in")
 
 	// Parse the command-line flags
 	flag.Parse()
 
+	// Load the YAML configuration
 	cfg, err := LoadConfig(*configPath)
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	conn, err := grpc.NewClient(cfg.ServerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-
+	// Create a gRPC connection
+	conn, err := grpc.Dial(cfg.ServerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to server at %s: %v", cfg.ServerAddress, err)
 	}
@@ -68,9 +67,17 @@ func main() {
 
 	// Create a client for our L2SMMultiDomainService
 	client := l2smmd.NewL2SMMultiDomainServiceClient(conn)
-
+	// Build the cluster list from config
 	clusters := make([]*l2smmd.Cluster, 0, len(cfg.Clusters))
+	fmt.Println(cfg.Clusters[0].GatewayNode)
+
 	for _, c := range cfg.Clusters {
+
+		gatewayNode := &l2smmd.Node{
+			Name:      c.GatewayNode.Name,
+			IpAddress: c.GatewayNode.IPAddress,
+		}
+
 		clusters = append(clusters, &l2smmd.Cluster{
 			Name: c.Name,
 			RestConfig: &l2smmd.RestConfig{
@@ -78,46 +85,73 @@ func main() {
 				ApiKey:      c.ApiKey,
 			},
 			Overlay: &l2smmd.Overlay{
+				// If you have pre-defined links, set them here. Otherwise they get generated automatically.
 				Nodes: c.Nodes,
 			},
+			GatewayNode: gatewayNode,
 		})
 	}
 
-	if *testSliceCreate {
+	// Wrap actions in a context with a 10-second timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-		fmt.Println("Creating network...")
+	// 1) Test Slice Create
+	if *testSliceCreate {
+		fmt.Println("Creating Slice...")
+
+		// Build the create request
 		createSliceReq := &l2smmd.CreateSliceRequest{
-			Namespace: "l2sm-system",
+			Namespace: *namespace,
 			Slice: &l2smmd.Slice{
 				Provider: &l2smmd.Provider{
 					Name:   cfg.Provider.Name,
 					Domain: cfg.Provider.Domain,
 				},
 				Clusters: clusters,
+				// Optionally define static links if you don't want them auto-generated
+				// Links: ...
 			},
 		}
-		_, err := client.CreateSlice(ctx, createSliceReq)
+
+		// Call CreateSlice
+		resp, err := client.CreateSlice(ctx, createSliceReq)
 		if err != nil {
 			log.Fatalf("Failed to create slice: %v", err)
 		}
-		fmt.Printf("CreateNetwork response: %s\n", "Network 'ping-network' created successfully.")
+		fmt.Printf("CreateSlice response: %s\n", resp.GetMessage())
 	}
 
+	// 2) Test Slice Delete
 	if *testSliceDelete {
+		fmt.Println("Deleting Slice...")
+
+		deleteSliceReq := &l2smmd.DeleteSliceRequest{
+			Namespace: *namespace,
+			Slice: &l2smmd.Slice{
+				Provider: &l2smmd.Provider{
+					Name:   cfg.Provider.Name,
+					Domain: cfg.Provider.Domain,
+				},
+				Clusters: clusters,
+				// If links are necessary for the request, fill them here as well
+			},
+		}
+
+		// Call DeleteSlice
+		resp, err := client.DeleteSlice(ctx, deleteSliceReq)
+		if err != nil {
+			log.Fatalf("Failed to delete slice: %v", err)
+		}
+		fmt.Printf("DeleteSlice response: %s\n", resp.GetMessage())
 	}
-	if *testNetworkDelete {
-	}
+
+	// 3) Test Network Create
 	if *testNetworkCreate {
-		fmt.Println("Creating network...")
+		fmt.Println("Creating L2Network...")
 
-		// Create a context with timeout to avoid blocking indefinitely
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-		defer cancel()
-
-		// Create a network
-		fmt.Println("Creating network...")
-		createReq := &l2smmd.CreateNetworkRequest{
-			Namespace: "l2sm-system",
+		createNetworkReq := &l2smmd.CreateNetworkRequest{
+			Namespace: *namespace,
 			Network: &l2smmd.L2Network{
 				Name: cfg.NetworkName,
 				Provider: &l2smmd.Provider{
@@ -129,25 +163,33 @@ func main() {
 			},
 		}
 
-		createRes, err := client.CreateNetwork(ctx, createReq)
+		// Call CreateNetwork
+		res, err := client.CreateNetwork(ctx, createNetworkReq)
 		if err != nil {
 			log.Fatalf("Failed to create network: %v", err)
 		}
-		fmt.Printf("CreateNetwork response: %s\n", createRes.GetMessage())
+		fmt.Printf("CreateNetwork response: %s\n", res.GetMessage())
+	}
 
-		// Here you might do additional operations, but for illustration we directly move to delete.
+	// 4) Test Network Delete
+	if *testNetworkDelete {
+		fmt.Println("Deleting L2Network...")
 
-		// Delete the network
-		fmt.Println("Deleting network...")
-		deleteReq := &l2smmd.DeleteNetworkRequest{
-			Network:   &l2smmd.L2Network{Name: cfg.NetworkName, Clusters: clusters},
-			Namespace: "l2sm-system",
+		deleteNetworkReq := &l2smmd.DeleteNetworkRequest{
+			Namespace: *namespace,
+			Network: &l2smmd.L2Network{
+				Name:     cfg.NetworkName,
+				Provider: &l2smmd.Provider{Name: cfg.Provider.Name, Domain: cfg.Provider.Domain},
+				Type:     cfg.NetworkType,
+				Clusters: clusters,
+			},
 		}
-		deleteRes, err := client.DeleteNetwork(ctx, deleteReq)
+
+		// Call DeleteNetwork
+		res, err := client.DeleteNetwork(ctx, deleteNetworkReq)
 		if err != nil {
 			log.Fatalf("Failed to delete network: %v", err)
 		}
-		fmt.Printf("DeleteNetwork response: %s\n", deleteRes.GetMessage())
-
+		fmt.Printf("DeleteNetwork response: %s\n", res.GetMessage())
 	}
 }

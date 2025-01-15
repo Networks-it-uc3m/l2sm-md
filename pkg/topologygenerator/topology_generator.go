@@ -1,26 +1,22 @@
 package topologygenerator
 
-type Node struct {
-	name      string
-	ipAddress string
-}
-type Link struct {
-	endpointA Node
-	endpointB Node
-}
+import (
+	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
+)
 
-func GenerateTopology(nodes ...Node) []Link {
+func GenerateTopology(nodes []string) []*l2smmd.Link {
 	numNodes := len(nodes)
-	links := make([]Link, numNodes*(numNodes-1)/2)
-	nodeIndex := 0
-	neighIndex := 1
-	for i := 1; i <= len(links); i++ {
-		links[i] = Link{endpointA: nodes[nodeIndex], endpointB: nodes[nodeIndex+neighIndex]}
-		neighIndex++
-		if numNodes == neighIndex {
-			nodeIndex++
-			neighIndex = nodeIndex + 1
+	links := make([]*l2smmd.Link, 0, numNodes*(numNodes-1)/2)
+
+	for i := 0; i < numNodes; i++ {
+		for j := i + 1; j < numNodes; j++ {
+			link := &l2smmd.Link{
+				EndpointA: nodes[i],
+				EndpointB: nodes[j],
+			}
+			links = append(links, link)
 		}
 	}
+
 	return links
 }

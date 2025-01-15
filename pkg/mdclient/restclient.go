@@ -25,6 +25,7 @@ import (
 	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/l2sminterface"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/operator"
+	"github.com/Networks-it-uc3m/l2sm-md/pkg/topologygenerator"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -120,20 +121,25 @@ func (restcli *RestClient) DeleteNetwork(network *l2smmd.L2Network, namespace st
 
 func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) error {
 
-	fmt.Printf("Creating slice %s", slice.GetProvider())
+	fmt.Printf("Creating slice %s", slice)
 
 	namespace = utils.DefaultIfEmpty(namespace, "default")
 
 	clusterMaps := make(map[string]l2sminterface.NodeConfig)
-
-	isMultiCluster := len(slice.GetClusters()) > 1
+	sliceClusters := slice.GetClusters()
+	isMultiCluster := len(sliceClusters) > 1
 	sliceLinks := slice.GetLinks()
 
 	if isMultiCluster {
 		if len(sliceLinks) == 0 {
-			// sliceLinks = topologygenerator.GenerateTopology(slice.GetClusters())
+			clusterNames := make([]string, len(sliceClusters))
+			for index, cluster := range sliceClusters {
+				clusterNames[index] = cluster.Name
+			}
+			sliceLinks = topologygenerator.GenerateTopology(clusterNames)
+			fmt.Println(sliceLinks)
 		}
-		for _, cluster := range slice.GetClusters() {
+		for _, cluster := range sliceClusters {
 			clusterMaps[cluster.GetName()] = l2sminterface.NodeConfig{
 				NodeName:  cluster.GetGatewayNode().GetName(),
 				IPAddress: cluster.GetGatewayNode().GetIpAddress()}
@@ -145,8 +151,9 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 	if err != nil {
 		return fmt.Errorf("could not get cluster certificates error: %v", err)
 	}
+	nedGenerator := l2sminterface.NewNEDGenerator(slice.GetProvider().GetName(), slice.GetProvider().GetDomain())
 
-	for _, cluster := range slice.GetClusters() {
+	for _, cluster := range sliceClusters {
 
 		clusterConfig := &rest.Config{
 			Host:        cluster.RestConfig.ApiKey,
@@ -164,7 +171,7 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 		if isMultiCluster {
 
 			clusterNeighbors := []l2sminterface.Neighbor{}
-
+			fmt.Println(sliceLinks)
 			for _, link := range sliceLinks {
 				switch cluster.GetName() {
 				case link.EndpointA:
@@ -178,40 +185,50 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 						Domain: clusterMaps[link.EndpointA].IPAddress,
 					})
 				}
-				nedGenerator := l2sminterface.NewNEDGenerator(slice.GetProvider().GetName(), slice.GetProvider().GetDomain())
-
-				ned := nedGenerator.ConstructNED(l2sminterface.NEDValues{
-					NodeConfig: l2sminterface.NodeConfig{NodeName: cluster.GetGatewayNode().GetName(), IPAddress: cluster.GetGatewayNode().GetIpAddress()},
-					Neighbors:  clusterNeighbors})
-
-				unstructuredNED, err := runtime.DefaultUnstructuredConverter.ToUnstructured(ned)
-
-				if err != nil {
-					return fmt.Errorf("failed to assign unstructured l2network: %v", err)
-				}
-
-				resource := l2sminterface.GetGVR(l2sminterface.NetworkEdgeDevice)
-
-				_, err = dynClient.Resource(resource).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: unstructuredNED}, metav1.CreateOptions{})
-				if err != nil {
-					return fmt.Errorf("error creating resource: %v", err)
-				}
 			}
+			fmt.Println("aaaaaaa")
 
-			//////////////////////////////////////7
-			overlay := l2sminterface.ConstructOverlayFromL2smmd(cluster.GetOverlay())
-			unstructuredOverlay, err := runtime.DefaultUnstructuredConverter.ToUnstructured(overlay)
+			fmt.Println(cluster.GetGatewayNode())
+
+			fmt.Println(l2sminterface.NodeConfig{NodeName: cluster.GetGatewayNode().GetName(), IPAddress: cluster.GetGatewayNode().GetIpAddress()})
+			fmt.Println(clusterNeighbors)
+			fmt.Println("aaaaaaa")
+			ned := nedGenerator.ConstructNED(l2sminterface.NEDValues{
+				NodeConfig: l2sminterface.NodeConfig{NodeName: cluster.GetGatewayNode().GetName(), IPAddress: cluster.GetGatewayNode().GetIpAddress()},
+				Neighbors:  clusterNeighbors})
+
+			unstructuredNED, err := runtime.DefaultUnstructuredConverter.ToUnstructured(ned)
+
 			if err != nil {
 				return fmt.Errorf("failed to assign unstructured l2network: %v", err)
 			}
 
-			_, err = dynClient.Resource(l2sminterface.GetGVR(l2sminterface.Overlay)).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: unstructuredOverlay}, metav1.CreateOptions{})
-			if err != nil {
-				return fmt.Errorf("error creating resource: %v", err)
-			}
+			resource := l2sminterface.GetGVR(l2sminterface.NetworkEdgeDevice)
 
+			fmt.Println(unstructuredNED)
+			fmt.Println(resource)
+			// _, err = dynClient.Resource(resource).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: unstructuredNED}, metav1.CreateOptions{})
+			// if err != nil {
+			// 	return fmt.Errorf("error creating resource: %v", err)
+			// }
+			dynClient.Resource(resource).Namespace(namespace).Get(context.Background(), "overlay-sample", metav1.GetOptions{})
 		}
+
+		//////////////////////////////////////7
+		overlay := l2sminterface.ConstructOverlayFromL2smmd(cluster.GetOverlay())
+		unstructuredOverlay, err := runtime.DefaultUnstructuredConverter.ToUnstructured(overlay)
+		if err != nil {
+			return fmt.Errorf("failed to assign unstructured l2network: %v", err)
+		}
+
+		fmt.Println(unstructuredOverlay)
+		// _, err = dynClient.Resource(l2sminterface.GetGVR(l2sminterface.Overlay)).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: unstructuredOverlay}, metav1.CreateOptions{})
+		// if err != nil {
+		// 	return fmt.Errorf("error creating resource: %v", err)
+		// }
+
 	}
+
 	return nil
 }
 

@@ -16,6 +16,7 @@ package l2sminterface
 
 import (
 	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -76,9 +77,39 @@ func (nedGenerator *NEDGenerator) ConstructNED(nedValues NEDValues) *l2smv1.Netw
 				NodeName:  nedValues.NodeConfig.NodeName,
 				IPAddress: nedValues.NodeConfig.IPAddress,
 			},
-			Neighbors: neighbors,
+			Neighbors:      neighbors,
+			SwitchTemplate: defaultNEDTemplate(),
 		},
 	}
 	return ned
 
+}
+
+func defaultNEDTemplate() *l2smv1.SwitchTemplateSpec {
+	return &l2smv1.SwitchTemplateSpec{
+		Spec: l2smv1.SwitchPodSpec{
+			HostNetwork: true,
+			Containers: []corev1.Container{
+				{
+					Name:  "l2sm-ned",
+					Image: "alexdecb/l2sm-switch:2.7.1",
+					Env: []corev1.EnvVar{
+						{
+							Name: "NODENAME",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									FieldPath: "spec.nodeName",
+								},
+							},
+						},
+					},
+					SecurityContext: &corev1.SecurityContext{
+						Capabilities: &corev1.Capabilities{
+							Add: []corev1.Capability{"NET_ADMIN"},
+						},
+					},
+				},
+			},
+		},
+	}
 }

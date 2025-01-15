@@ -19,6 +19,8 @@ import (
 	"fmt"
 
 	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
+	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
+	"github.com/Networks-it-uc3m/l2sm-md/pkg/topologygenerator"
 	"gopkg.in/yaml.v2"
 
 	corev1 "k8s.io/api/core/v1"
@@ -42,41 +44,9 @@ func constructOverlayFromTopology(overlay *l2smv1.TopologySpec) (*l2smv1.Overlay
 			Name: "overlay-sample",
 		},
 		Spec: l2smv1.OverlaySpec{
-			NetworkController: &l2smv1.NetworkControllerSpec{
-				Name:   "l2sm-sdn",
-				Domain: "l2sm-controller-service.l2sm-system.svc",
-			},
-			SwitchTemplate: &l2smv1.SwitchTemplateSpec{
-				Spec: l2smv1.SwitchPodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "l2sm-switch",
-							Image: "alexdecb/l2sm-switch:2.7",
-							Env: []corev1.EnvVar{
-								{
-									Name: "NODENAME",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "spec.nodeName",
-										},
-									},
-								},
-							},
-							ImagePullPolicy: corev1.PullAlways,
-							SecurityContext: &corev1.SecurityContext{
-								Capabilities: &corev1.Capabilities{
-									Add: []corev1.Capability{"NET_ADMIN"},
-								},
-							},
-							// Ports: []corev1.ContainerPort{
-							// 	{
-							// 		ContainerPort: 80,
-							// 	},
-							// },
-						},
-					},
-				},
-			},
+			NetworkController: defaultNetworkController(),
+
+			SwitchTemplate: defaultSwitchTemplate(),
 			Topology: &l2smv1.TopologySpec{
 				Nodes: overlay.Nodes,
 				Links: overlay.Links,
@@ -146,4 +116,76 @@ func (overlayGenerator *OverlayGenerator) AddValues(byteValues []byte) error {
 	// Assign the unmarshaled values to the overlayGenerator.Values field
 	overlayGenerator.Values = &values
 	return nil
+}
+
+func ConstructOverlayFromL2smmd(overlay *l2smmd.Overlay) *l2smv1.Overlay {
+	fmt.Println("OVERLAYY")
+	fmt.Println(overlay.GetProvider().GetName())
+	fmt.Println("safe?")
+
+	links := make([]l2smv1.Link, len(overlay.Links))
+
+	if len(overlay.Links) == 0 && len(overlay.Nodes) > 1 {
+		overlay.Links = topologygenerator.GenerateTopology(overlay.GetNodes())
+	}
+
+	for _, link := range overlay.Links {
+		l2Link := l2smv1.Link{EndpointA: link.EndpointA, EndpointB: link.EndpointB}
+		links = append(links, l2Link)
+	}
+
+	l2overlay := &l2smv1.Overlay{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       GetKind(Overlay), // Fix: Use the actual kind name, not the resource name
+			APIVersion: l2smv1.GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "overlay-sample",
+		},
+		Spec: l2smv1.OverlaySpec{
+			NetworkController: defaultNetworkController(),
+			SwitchTemplate:    defaultSwitchTemplate(),
+			Topology: &l2smv1.TopologySpec{
+				Nodes: overlay.Nodes,
+				Links: links,
+			},
+		},
+	}
+	return l2overlay
+}
+
+func defaultSwitchTemplate() *l2smv1.SwitchTemplateSpec {
+	return &l2smv1.SwitchTemplateSpec{
+		Spec: l2smv1.SwitchPodSpec{
+			Containers: []corev1.Container{
+				{
+					Name:  "l2sm-switch",
+					Image: "alexdecb/l2sm-switch:2.7",
+					Env: []corev1.EnvVar{
+						{
+							Name: "NODENAME",
+							ValueFrom: &corev1.EnvVarSource{
+								FieldRef: &corev1.ObjectFieldSelector{
+									FieldPath: "spec.nodeName",
+								},
+							},
+						},
+					},
+					ImagePullPolicy: corev1.PullAlways,
+					SecurityContext: &corev1.SecurityContext{
+						Capabilities: &corev1.Capabilities{
+							Add: []corev1.Capability{"NET_ADMIN"},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func defaultNetworkController() *l2smv1.NetworkControllerSpec {
+	return &l2smv1.NetworkControllerSpec{
+		Name:   "l2sm-sdn",
+		Domain: "l2sm-controller-service.l2sm-system.svc",
+	}
 }

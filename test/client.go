@@ -46,7 +46,7 @@ func main() {
 	testSliceCreate := flag.Bool("test-slice-create", false, "Simulate creating a slice resource")
 	testSliceDelete := flag.Bool("test-slice-delete", false, "Simulate deleting a slice resource")
 
-	configPath := flag.String("config", "./config.yaml", "Path to YAML config file")
+	configPath := flag.String("config", "./test/config.yaml", "Path to YAML config file")
 	namespace := flag.String("namespace", "l2sm-system", "Kubernetes namespace to place resources in")
 
 	// Parse the command-line flags
@@ -59,7 +59,7 @@ func main() {
 	}
 
 	// Create a gRPC connection
-	conn, err := grpc.Dial(cfg.ServerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(cfg.ServerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to server at %s: %v", cfg.ServerAddress, err)
 	}
@@ -156,7 +156,7 @@ func main() {
 				Name: cfg.NetworkName,
 				Provider: &l2smmd.Provider{
 					Name:   cfg.Provider.Name,
-					Domain: cfg.Provider.Domain,
+					Domain: fmt.Sprintf("%s:8181", cfg.Provider.Domain),
 				},
 				Type:     cfg.NetworkType,
 				Clusters: clusters,

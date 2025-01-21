@@ -160,7 +160,7 @@ func defaultSwitchTemplate() *l2smv1.SwitchTemplateSpec {
 			Containers: []corev1.Container{
 				{
 					Name:  "l2sm-switch",
-					Image: "alexdecb/l2sm-switch:2.7",
+					Image: SWITCH_DOCKER_IMAGE,
 					Env: []corev1.EnvVar{
 						{
 							Name: "NODENAME",

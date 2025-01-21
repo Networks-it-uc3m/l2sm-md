@@ -20,6 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const SWITCH_DOCKER_IMAGE = "alexdecb/l2sm-switch:1.0.2"
+
 type NEDValues struct {
 	NodeConfig NodeConfig
 	Neighbors  []Neighbor
@@ -49,7 +51,7 @@ func NewNEDGenerator(sliceName string, providerDomain string) *NEDGenerator {
 	return &NEDGenerator{
 		SliceName: sliceName,
 		Provider: SDNController{
-			Name:   sliceName + "-controller",
+			Name:   sliceName,
 			Domain: providerDomain,
 		}}
 }
@@ -91,8 +93,9 @@ func defaultNEDTemplate() *l2smv1.SwitchTemplateSpec {
 			HostNetwork: true,
 			Containers: []corev1.Container{
 				{
-					Name:  "l2sm-ned",
-					Image: "alexdecb/l2sm-switch:2.7.1",
+					Name:    "l2sm-ned",
+					Image:   SWITCH_DOCKER_IMAGE,
+					Command: []string{"./setup_ned.sh"},
 					Env: []corev1.EnvVar{
 						{
 							Name: "NODENAME",

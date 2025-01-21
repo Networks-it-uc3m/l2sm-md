@@ -207,10 +207,10 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 
 			fmt.Println(unstructuredNED)
 			fmt.Println(resource)
-			// _, err = dynClient.Resource(resource).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: unstructuredNED}, metav1.CreateOptions{})
-			// if err != nil {
-			// 	return fmt.Errorf("error creating resource: %v", err)
-			// }
+			_, err = dynClient.Resource(resource).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: unstructuredNED}, metav1.CreateOptions{})
+			if err != nil {
+				return fmt.Errorf("error creating resource: %v", err)
+			}
 			dynClient.Resource(resource).Namespace(namespace).Get(context.Background(), "overlay-sample", metav1.GetOptions{})
 		}
 
@@ -222,10 +222,10 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 		}
 
 		fmt.Println(unstructuredOverlay)
-		// _, err = dynClient.Resource(l2sminterface.GetGVR(l2sminterface.Overlay)).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: unstructuredOverlay}, metav1.CreateOptions{})
-		// if err != nil {
-		// 	return fmt.Errorf("error creating resource: %v", err)
-		// }
+		_, err = dynClient.Resource(l2sminterface.GetGVR(l2sminterface.Overlay)).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: unstructuredOverlay}, metav1.CreateOptions{})
+		if err != nil {
+			return fmt.Errorf("error creating resource: %v", err)
+		}
 
 	}
 

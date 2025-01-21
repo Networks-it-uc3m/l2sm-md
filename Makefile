@@ -174,7 +174,7 @@ install-l2sm:
 		$(KUBECTL) --context kind-worker-cluster-$$number wait --for=condition=Ready pods --all -A --timeout=300s; \
 	done; \
 	for number in $(shell seq 1 ${WORKER_CLUSTER_NUM}); do \
-		$(KUBECTL) --context kind-worker-cluster-$$number create -f https://github.com/Networks-it-uc3m/L2S-M/raw/refs/heads/main/deployments/l2sm-deployment.yaml; \
+		$(KUBECTL) --context kind-worker-cluster-$$number apply -f https://github.com/Networks-it-uc3m/L2S-M/raw/refs/heads/development/deployments/l2sm-deployment.yaml; \
 	done
 
 .PHONY: add-cni

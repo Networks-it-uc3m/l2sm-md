@@ -22,6 +22,8 @@ import (
 
 	"context"
 
+	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
+
 	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/l2sminterface"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/operator"
@@ -45,14 +47,21 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network, namespace st
 	namespace = utils.DefaultIfEmpty(namespace, "default")
 
 	l2network, err := l2sminterface.ConstructL2NetworkFromL2smmd(network)
+
 	if err != nil {
 		return fmt.Errorf("failed to construct l2network: %v", err)
 	}
-	unstructuredL2network, err := runtime.DefaultUnstructuredConverter.ToUnstructured(l2network)
-	if err != nil {
-		return fmt.Errorf("failed to assign unstructured l2network: %v", err)
+
+	var l2networkArray *l2smv1.L2NetworkList
+
+	if network.GetPodCidr() != "" {
+		l2networkArray, err = l2sminterface.ApplyCIDRs(network.PodCidr, *l2network, len(network.Clusters))
+		if err != nil {
+			return fmt.Errorf("failed to apply cidr configs to l2network: %v", err)
+		}
+
 	}
-	unstructuredObj := &unstructured.Unstructured{Object: unstructuredL2network}
+
 	// creates the in-cluster config
 
 	clusterCrts, err := operator.GetClusterCertificates(&restcli.ManagerClusterConfig)
@@ -61,7 +70,22 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network, namespace st
 		return fmt.Errorf("could not get cluster certificates error: %v", err)
 	}
 
-	for _, cluster := range network.Clusters {
+	for index, cluster := range network.Clusters {
+
+		var unstructuredL2network map[string]interface{}
+		if network.GetPodCidr() != "" {
+			l2network = &l2networkArray.Items[index]
+
+		}
+
+		unstructuredL2network, err = runtime.DefaultUnstructuredConverter.ToUnstructured(l2network)
+
+		if err != nil {
+			return fmt.Errorf("failed to assign unstructured l2network: %v", err)
+		}
+
+		unstructuredObj := &unstructured.Unstructured{Object: unstructuredL2network}
+
 		clusterConfig := &rest.Config{Host: cluster.RestConfig.ApiKey, BearerToken: cluster.RestConfig.BearerToken,
 			TLSClientConfig: rest.TLSClientConfig{
 				Insecure: false, // Set to true if self-signed certs are acceptable

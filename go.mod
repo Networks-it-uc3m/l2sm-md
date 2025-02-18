@@ -3,7 +3,7 @@ module github.com/Networks-it-uc3m/l2sm-md
 go 1.22.5
 
 require (
-	github.com/Networks-it-uc3m/L2S-M v1.2.8
+	github.com/Networks-it-uc3m/L2S-M v1.2.9
 	google.golang.org/grpc v1.67.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v2 v2.4.0

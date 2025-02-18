@@ -109,8 +109,6 @@ func main() {
 					Domain: cfg.Provider.Domain,
 				},
 				Clusters: clusters,
-				// Optionally define static links if you don't want them auto-generated
-				// Links: ...
 			},
 		}
 
@@ -160,6 +158,7 @@ func main() {
 				},
 				Type:     cfg.NetworkType,
 				Clusters: clusters,
+				PodCidr:  "10.1.0.0/16",
 			},
 		}
 

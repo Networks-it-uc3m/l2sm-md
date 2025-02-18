@@ -15,6 +15,10 @@
 package l2sminterface
 
 import (
+	"encoding/binary"
+	"fmt"
+	"net"
+
 	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
 	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/utils"
@@ -41,4 +45,51 @@ func ConstructL2NetworkFromL2smmd(network *l2smmd.L2Network) (*l2smv1.L2Network,
 		},
 	}
 	return l2network, nil
+}
+
+func ApplyCIDRs(networkCIDR string, l2network l2smv1.L2Network, numberClusters int) (*l2smv1.L2NetworkList, error) {
+	// Parse the input CIDR
+	ip, ipNet, err := net.ParseCIDR(networkCIDR)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the current prefix length (e.g., 16 for /16)
+	ones, _ := ipNet.Mask.Size()
+
+	// Determine how many bits are needed.
+	// Using the binary representation of numberClusters gives us the length.
+	bitsNeeded := len(fmt.Sprintf("%b", numberClusters))
+	newPrefix := ones + bitsNeeded
+	if newPrefix > 32 {
+		return nil, fmt.Errorf("new prefix length %d exceeds 32", newPrefix)
+	}
+
+	// Calculate the size of each new subnet (number of IP addresses)
+	blockSize := uint32(1) << (32 - newPrefix)
+
+	// Get the base IP (aligned to the original network boundary)
+	baseIP := ip.Mask(ipNet.Mask)
+	ipInt := binary.BigEndian.Uint32(baseIP.To4())
+
+	// Prepare the list to hold the new L2Network entries
+	networks := make([]l2smv1.L2Network, 0, numberClusters)
+
+	// Iterate over clusters. We start at 1 so that the subnet bits become, e.g., 001, 010, etc.
+	for i := 1; i <= numberClusters; i++ {
+		// Compute the new network address offset by i*blockSize
+		newIPInt := ipInt + uint32(i)*blockSize
+		newIP := make(net.IP, 4)
+		binary.BigEndian.PutUint32(newIP, newIPInt)
+
+		// Form the new CIDR string
+		newCIDR := fmt.Sprintf("%s/%d", newIP.String(), newPrefix)
+
+		// Clone the input l2network and update its CIDR
+		newL2 := l2network
+		newL2.Spec.NetworkCIDR = newCIDR
+		networks = append(networks, newL2)
+	}
+
+	return &l2smv1.L2NetworkList{Items: networks}, nil
 }

@@ -153,8 +153,10 @@ func main() {
 			Network: &l2smmd.L2Network{
 				Name: cfg.NetworkName,
 				Provider: &l2smmd.Provider{
-					Name:   cfg.Provider.Name,
-					Domain: fmt.Sprintf("%s:8181", cfg.Provider.Domain),
+					Name:    cfg.Provider.Name,
+					Domain:  cfg.Provider.Domain,
+					DnsPort: "30818",
+					SdnPort: "30808",
 				},
 				Type:     cfg.NetworkType,
 				Clusters: clusters,

@@ -19,7 +19,7 @@ namespace: l2sm-system
 # "wordpress" becomes "alices-wordpress".
 # Note that it should also match with the prefix (text before '-') of the namespace
 # field above.
-namePrefix: l2smmd-
+namePrefix: l2sm-
 
 # Labels to add to all resources and selectors.
 #labels:
@@ -31,6 +31,8 @@ resources:
 - ../server
 - ../idcoprovider
 - ../rbac
+- ../../dns/config/rbac
+- ../../dns/config/server
 # patches:
 # # Protect the /metrics endpoint by putting it behind auth.
 # # If you want your controller-manager to expose the /metrics
@@ -40,3 +42,9 @@ resources:
 # # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in
 # # crd/kustomization.yaml
 # - path: manager_webhook_patch.yaml
+
+patches:
+  - path: dns-env-patch.yaml
+  - path: idco-service-patch.yaml  
+  - path: grpc-service-patch.yaml
+  - path: coredns-service-patch.yaml

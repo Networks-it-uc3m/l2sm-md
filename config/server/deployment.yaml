@@ -15,7 +15,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: server
+  name: grpc-server
   labels:
     app: l2sm
 spec:

@@ -1,0 +1,15 @@
+# deployment-env-patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coredns             
+spec:
+  template:
+    spec:
+      containers:
+      - name: dns-server    
+        env:
+          - name: CONFIGMAP_NS
+            value: "l2sm-system"
+          - name: CONFIGMAP_NAME
+            value: "l2sm-coredns-config"

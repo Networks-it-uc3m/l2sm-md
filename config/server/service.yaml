@@ -15,7 +15,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: service
+  name: grpc-service
   labels:
     app: l2sm
 spec:

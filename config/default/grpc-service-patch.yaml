@@ -1,4 +1,4 @@
-# Copyright 2024 Universidad Carlos III de Madrid
+# Copyright 2025 Alejandro de Cock Buning; Ivan Vidal; Francisco Valera; Diego R. Lopez.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,17 +15,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: idcoprovider-service
+  name: grpc-service
 spec:
-  selector:
-    app: idcoprovider
+  type: NodePort
   ports:
-  - name: of13-port
-    protocol: TCP
-    port: 6633
-    targetPort: 6633
-  - name: http-port
-    protocol: TCP
-    port: 8181
-    targetPort: 8181
-  type: ClusterIP
+  - protocol: TCP
+    port: 50051
+    nodePort: 30051
+

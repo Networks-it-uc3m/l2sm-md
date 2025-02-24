@@ -1,0 +1,17 @@
+# deployment-env-patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-server             
+spec:
+  template:
+    spec:
+      containers:
+      - name: server-container    
+        env:
+          - name: DEFAULT_OF_PORT
+            value: "30663"
+          - name: DEFAULT_SDN_PORT
+            value: "30808"
+          - name: DEFAULT_DNS_PORT
+            value: "30818"

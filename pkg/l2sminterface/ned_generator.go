@@ -16,11 +16,12 @@ package l2sminterface
 
 import (
 	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
+	"github.com/Networks-it-uc3m/l2sm-md/internal/env"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const SWITCH_DOCKER_IMAGE = "alexdecb/l2sm-switch:1.0.2"
+const SWITCH_DOCKER_IMAGE = "alexdecb/l2sm-switch:1.2.9"
 
 type NEDValues struct {
 	NodeConfig NodeConfig
@@ -28,8 +29,11 @@ type NEDValues struct {
 }
 
 type SDNController struct {
-	Name   string
-	Domain string
+	Name    string
+	Domain  string
+	SDNPort string
+	DNSPort string
+	OFPort  string
 }
 
 type NodeConfig struct {
@@ -47,12 +51,29 @@ type NEDGenerator struct {
 	Provider  SDNController
 }
 
-func NewNEDGenerator(sliceName string, providerDomain string) *NEDGenerator {
+func NewNEDGenerator(sdnController SDNController) *NEDGenerator {
+	sdnPort := sdnController.SDNPort
+	dnsPort := sdnController.DNSPort
+	ofPort := sdnController.OFPort
+
+	if sdnPort == "" {
+		sdnPort = env.GetDefaultSDNPort()
+	}
+	if dnsPort == "" {
+		dnsPort = env.GetDefaultDNSPort()
+	}
+	if ofPort == "" {
+		ofPort = env.GetDefaultOFPort()
+
+	}
 	return &NEDGenerator{
-		SliceName: sliceName,
+		SliceName: sdnController.Name,
 		Provider: SDNController{
-			Name:   sliceName,
-			Domain: providerDomain,
+			Name:    sdnController.Name,
+			Domain:  sdnController.Domain,
+			SDNPort: sdnPort,
+			DNSPort: dnsPort,
+			OFPort:  ofPort,
 		}}
 }
 func (nedGenerator *NEDGenerator) ConstructNED(nedValues NEDValues) *l2smv1.NetworkEdgeDevice {
@@ -71,9 +92,12 @@ func (nedGenerator *NEDGenerator) ConstructNED(nedValues NEDValues) *l2smv1.Netw
 			Name: nedGenerator.SliceName + "-ned",
 		},
 		Spec: l2smv1.NetworkEdgeDeviceSpec{
-			NetworkController: &l2smv1.NetworkControllerSpec{
-				Name:   nedGenerator.Provider.Name,
-				Domain: nedGenerator.Provider.Domain,
+			Provider: &l2smv1.ProviderSpec{
+				Name:    nedGenerator.Provider.Name,
+				Domain:  nedGenerator.Provider.Domain,
+				OFPort:  nedGenerator.Provider.OFPort,
+				SDNPort: nedGenerator.Provider.SDNPort,
+				DNSPort: nedGenerator.Provider.DNSPort,
 			},
 			NodeConfig: &l2smv1.NodeConfigSpec{
 				NodeName:  nedValues.NodeConfig.NodeName,

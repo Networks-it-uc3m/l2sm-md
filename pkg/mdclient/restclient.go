@@ -175,7 +175,14 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 	if err != nil {
 		return fmt.Errorf("could not get cluster certificates error: %v", err)
 	}
-	nedGenerator := l2sminterface.NewNEDGenerator(slice.GetProvider().GetName(), slice.GetProvider().GetDomain())
+
+	nedGenerator := l2sminterface.NewNEDGenerator(l2sminterface.SDNController{
+		Name:    slice.GetProvider().GetName(),
+		Domain:  slice.GetProvider().GetDomain(),
+		SDNPort: slice.GetProvider().GetSdnPort(),
+		DNSPort: slice.GetProvider().GetDnsPort(),
+		OFPort:  slice.GetProvider().GetOfPort(),
+	})
 
 	for _, cluster := range sliceClusters {
 
@@ -210,13 +217,7 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 					})
 				}
 			}
-			fmt.Println("aaaaaaa")
 
-			fmt.Println(cluster.GetGatewayNode())
-
-			fmt.Println(l2sminterface.NodeConfig{NodeName: cluster.GetGatewayNode().GetName(), IPAddress: cluster.GetGatewayNode().GetIpAddress()})
-			fmt.Println(clusterNeighbors)
-			fmt.Println("aaaaaaa")
 			ned := nedGenerator.ConstructNED(l2sminterface.NEDValues{
 				NodeConfig: l2sminterface.NodeConfig{NodeName: cluster.GetGatewayNode().GetName(), IPAddress: cluster.GetGatewayNode().GetIpAddress()},
 				Neighbors:  clusterNeighbors})

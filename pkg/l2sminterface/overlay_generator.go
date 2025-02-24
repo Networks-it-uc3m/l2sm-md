@@ -44,7 +44,7 @@ func constructOverlayFromTopology(overlay *l2smv1.TopologySpec) (*l2smv1.Overlay
 			Name: "overlay-sample",
 		},
 		Spec: l2smv1.OverlaySpec{
-			NetworkController: defaultNetworkController(),
+			Provider: defaultProvider(),
 
 			SwitchTemplate: defaultSwitchTemplate(),
 			Topology: &l2smv1.TopologySpec{
@@ -119,9 +119,6 @@ func (overlayGenerator *OverlayGenerator) AddValues(byteValues []byte) error {
 }
 
 func ConstructOverlayFromL2smmd(overlay *l2smmd.Overlay) *l2smv1.Overlay {
-	fmt.Println("OVERLAYY")
-	fmt.Println(overlay.GetProvider().GetName())
-	fmt.Println("safe?")
 
 	links := make([]l2smv1.Link, len(overlay.Links))
 
@@ -143,8 +140,8 @@ func ConstructOverlayFromL2smmd(overlay *l2smmd.Overlay) *l2smv1.Overlay {
 			Name: "overlay-sample",
 		},
 		Spec: l2smv1.OverlaySpec{
-			NetworkController: defaultNetworkController(),
-			SwitchTemplate:    defaultSwitchTemplate(),
+			Provider:       defaultProvider(),
+			SwitchTemplate: defaultSwitchTemplate(),
 			Topology: &l2smv1.TopologySpec{
 				Nodes: overlay.Nodes,
 				Links: links,
@@ -183,9 +180,11 @@ func defaultSwitchTemplate() *l2smv1.SwitchTemplateSpec {
 	}
 }
 
-func defaultNetworkController() *l2smv1.NetworkControllerSpec {
-	return &l2smv1.NetworkControllerSpec{
-		Name:   "l2sm-sdn",
-		Domain: "l2sm-controller-service.l2sm-system.svc",
+func defaultProvider() *l2smv1.ProviderSpec {
+	return &l2smv1.ProviderSpec{
+		Name:    "l2sm-sdn",
+		Domain:  "l2sm-controller-service.l2sm-system.svc",
+		OFPort:  "6633",
+		SDNPort: "8181",
 	}
 }

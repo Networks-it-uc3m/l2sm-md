@@ -39,8 +39,11 @@ func ConstructL2NetworkFromL2smmd(network *l2smmd.L2Network) (*l2smv1.L2Network,
 			Type:   l2smv1.NetworkType(utils.DefaultIfEmpty(network.Type, "vnet")),
 			Config: &network.PodCidr,
 			Provider: &l2smv1.ProviderSpec{
-				Name:   network.Provider.Name,
-				Domain: network.Provider.Domain,
+				Name:    network.Provider.Name,
+				Domain:  network.Provider.Domain,
+				SDNPort: network.Provider.SdnPort,
+				OFPort:  network.Provider.OfPort,
+				DNSPort: network.Provider.DnsPort,
 			},
 		},
 	}
@@ -87,7 +90,8 @@ func ApplyCIDRs(networkCIDR string, l2network l2smv1.L2Network, numberClusters i
 
 		// Clone the input l2network and update its CIDR
 		newL2 := l2network
-		newL2.Spec.NetworkCIDR = newCIDR
+		newL2.Spec.NetworkCIDR = networkCIDR
+		newL2.Spec.PodAddressRange = newCIDR
 		networks = append(networks, newL2)
 	}
 

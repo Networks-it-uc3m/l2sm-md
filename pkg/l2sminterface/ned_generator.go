@@ -29,11 +29,12 @@ type NEDValues struct {
 }
 
 type SDNController struct {
-	Name    string
-	Domain  string
-	SDNPort string
-	DNSPort string
-	OFPort  string
+	Name        string
+	Domain      string
+	SDNPort     string
+	DNSPort     string
+	OFPort      string
+	DNSGRPCPort string
 }
 
 type NodeConfig struct {
@@ -55,9 +56,13 @@ func NewNEDGenerator(sdnController SDNController) *NEDGenerator {
 	sdnPort := sdnController.SDNPort
 	dnsPort := sdnController.DNSPort
 	ofPort := sdnController.OFPort
+	dnsGRPCPort := sdnController.DNSGRPCPort
 
 	if sdnPort == "" {
 		sdnPort = env.GetDefaultSDNPort()
+	}
+	if dnsGRPCPort == "" {
+		dnsGRPCPort = env.GetDefaultDNSGRPCPort()
 	}
 	if dnsPort == "" {
 		dnsPort = env.GetDefaultDNSPort()
@@ -69,11 +74,12 @@ func NewNEDGenerator(sdnController SDNController) *NEDGenerator {
 	return &NEDGenerator{
 		SliceName: sdnController.Name,
 		Provider: SDNController{
-			Name:    sdnController.Name,
-			Domain:  sdnController.Domain,
-			SDNPort: sdnPort,
-			DNSPort: dnsPort,
-			OFPort:  ofPort,
+			Name:        sdnController.Name,
+			Domain:      sdnController.Domain,
+			SDNPort:     sdnPort,
+			DNSGRPCPort: dnsGRPCPort,
+			DNSPort:     dnsPort,
+			OFPort:      ofPort,
 		}}
 }
 func (nedGenerator *NEDGenerator) ConstructNED(nedValues NEDValues) *l2smv1.NetworkEdgeDevice {
@@ -93,11 +99,12 @@ func (nedGenerator *NEDGenerator) ConstructNED(nedValues NEDValues) *l2smv1.Netw
 		},
 		Spec: l2smv1.NetworkEdgeDeviceSpec{
 			Provider: &l2smv1.ProviderSpec{
-				Name:    nedGenerator.Provider.Name,
-				Domain:  nedGenerator.Provider.Domain,
-				OFPort:  nedGenerator.Provider.OFPort,
-				SDNPort: nedGenerator.Provider.SDNPort,
-				DNSPort: nedGenerator.Provider.DNSPort,
+				Name:        nedGenerator.Provider.Name,
+				Domain:      nedGenerator.Provider.Domain,
+				OFPort:      nedGenerator.Provider.OFPort,
+				SDNPort:     nedGenerator.Provider.SDNPort,
+				DNSPort:     nedGenerator.Provider.DNSPort,
+				DNSGRPCPort: nedGenerator.Provider.DNSGRPCPort,
 			},
 			NodeConfig: &l2smv1.NodeConfigSpec{
 				NodeName:  nedValues.NodeConfig.NodeName,

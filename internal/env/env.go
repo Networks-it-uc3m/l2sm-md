@@ -29,8 +29,12 @@ func GetDefaultSDNPort() string {
 	return getEnv("DEFAULT_SDN_PORT", "30808")
 }
 
+func GetDefaultDNSGRPCPort() string {
+	return getEnv("DEFAULT_DNS_GRPC_PORT", "30818")
+}
+
 func GetDefaultDNSPort() string {
-	return getEnv("DEFAULT_DNS_PORT", "30818")
+	return getEnv("DEFAULT_DNS_PORT", "30053")
 }
 
 func GetDefaultOFPort() string {

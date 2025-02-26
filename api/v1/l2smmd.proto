@@ -10,6 +10,7 @@ message Provider {
     string dns_port = 3;
     string sdn_port = 4;
     string of_port = 5;
+    string dns_grpc_port = 6;
 }
 
 message Link {

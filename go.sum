@@ -2,6 +2,8 @@ github.com/Networks-it-uc3m/L2S-M v1.2.9 h1:0xnV8iLeNSWyn8hOEjodRggZ4O3wwccKJbs9
 github.com/Networks-it-uc3m/L2S-M v1.2.9/go.mod h1:B9+eP0SqPE58gLVQzIBfpB2JF1BtcE1IpfejDZJKclk=
 github.com/Networks-it-uc3m/L2S-M v1.2.10 h1:ePeif9epbR5eGfKjI5HrCliid51pEBDMNgNd7P8lN1Y=
 github.com/Networks-it-uc3m/L2S-M v1.2.10/go.mod h1:vz2R4AaBsN4wvQPRpTvmcGN5OmbxI9W2YB0wR4UZ6+s=
+github.com/Networks-it-uc3m/L2S-M v1.2.11 h1:TUxk1uy0eTDQs/cc6hpq+bxXVUEKqkWDVYuioca1/ZA=
+github.com/Networks-it-uc3m/L2S-M v1.2.11/go.mod h1:CLYxGy7TdxNYyaqlnpbwgMOUJ6/8RUxGhvyNkF243mA=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

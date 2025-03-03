@@ -60,8 +60,19 @@ message CreateNetworkRequest {
     string namespace = 2;
 }
 
+message FieldPatch {
+  // A dot path or JSONPath-like string:
+  // e.g. "spec.template.metadata.labels.l2sm"
+  string path = 1;
+
+  // The desired value for that path
+  // e.g. "true"
+  string value = 2;
+}
+
 message CreateNetworkResponse {
     string message = 1;
+    repeated FieldPatch patches = 2;
 }
 
 message DeleteNetworkRequest {

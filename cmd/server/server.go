@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
+	"github.com/Networks-it-uc3m/l2sm-md/pkg/l2sminterface"
 	"github.com/Networks-it-uc3m/l2sm-md/pkg/mdclient"
 )
 
@@ -35,7 +36,7 @@ func (s *server) CreateNetwork(ctx context.Context, req *l2smmd.CreateNetworkReq
 	if err != nil {
 		return nil, fmt.Errorf("could not create network: %v", err)
 	}
-	return &l2smmd.CreateNetworkResponse{Message: "Network created successfully"}, nil
+	return &l2smmd.CreateNetworkResponse{Message: "Network created successfully", Patches: l2sminterface.GetWorkloadPatchInstructions(req.GetNetwork().GetName())}, nil
 }
 
 // DeleteNetwork calls a method from mdclient to delete a network

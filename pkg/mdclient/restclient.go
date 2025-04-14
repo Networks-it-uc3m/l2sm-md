@@ -78,6 +78,10 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network, namespace st
 
 		}
 
+		if cluster.GetPodAddressPool() != "" {
+			l2network.Spec.PodAddressRange = cluster.GetPodAddressPool()
+		}
+
 		unstructuredL2network, err = runtime.DefaultUnstructuredConverter.ToUnstructured(l2network)
 
 		if err != nil {

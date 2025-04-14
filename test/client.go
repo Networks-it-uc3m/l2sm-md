@@ -71,6 +71,15 @@ func main() {
 	clusters := make([]*l2smmd.Cluster, 0, len(cfg.Clusters))
 	fmt.Println(cfg.Clusters[0].GatewayNode)
 
+	provider := &l2smmd.Provider{
+		Name:        cfg.Provider.Name,
+		Domain:      cfg.Provider.Domain,
+		DnsPort:     cfg.Provider.DnsPort,
+		SdnPort:     cfg.Provider.SdnPort,
+		DnsGrpcPort: cfg.Provider.DnsGrpcPort,
+		OfPort:      cfg.Provider.OfPort,
+	}
+
 	for _, c := range cfg.Clusters {
 
 		gatewayNode := &l2smmd.Node{
@@ -88,7 +97,9 @@ func main() {
 				// If you have pre-defined links, set them here. Otherwise they get generated automatically.
 				Nodes: c.Nodes,
 			},
-			GatewayNode: gatewayNode,
+			GatewayNode:    gatewayNode,
+			PodAddressPool: c.AddressPool,
+			Namespace:      c.Namespace,
 		})
 	}
 
@@ -104,10 +115,7 @@ func main() {
 		createSliceReq := &l2smmd.CreateSliceRequest{
 			Namespace: *namespace,
 			Slice: &l2smmd.Slice{
-				Provider: &l2smmd.Provider{
-					Name:   cfg.Provider.Name,
-					Domain: cfg.Provider.Domain,
-				},
+				Provider: provider,
 				Clusters: clusters,
 			},
 		}
@@ -127,10 +135,7 @@ func main() {
 		deleteSliceReq := &l2smmd.DeleteSliceRequest{
 			Namespace: *namespace,
 			Slice: &l2smmd.Slice{
-				Provider: &l2smmd.Provider{
-					Name:   cfg.Provider.Name,
-					Domain: cfg.Provider.Domain,
-				},
+				Provider: provider,
 				Clusters: clusters,
 				// If links are necessary for the request, fill them here as well
 			},
@@ -151,14 +156,8 @@ func main() {
 		createNetworkReq := &l2smmd.CreateNetworkRequest{
 			Namespace: *namespace,
 			Network: &l2smmd.L2Network{
-				Name: cfg.NetworkName,
-				Provider: &l2smmd.Provider{
-					Name:        cfg.Provider.Name,
-					Domain:      cfg.Provider.Domain,
-					DnsPort:     "30818",
-					SdnPort:     "30808",
-					DnsGrpcPort: "30053",
-				},
+				Name:     cfg.NetworkName,
+				Provider: provider,
 				Type:     cfg.NetworkType,
 				Clusters: clusters,
 				PodCidr:  "10.1.0.0/16",
@@ -171,6 +170,7 @@ func main() {
 			log.Fatalf("Failed to create network: %v", err)
 		}
 		fmt.Printf("CreateNetwork response: %s\n", res.GetMessage())
+		fmt.Printf("Please append the following fields to your workload: %s\n", res.GetPatches())
 	}
 
 	// 4) Test Network Delete
@@ -181,7 +181,7 @@ func main() {
 			Namespace: *namespace,
 			Network: &l2smmd.L2Network{
 				Name:     cfg.NetworkName,
-				Provider: &l2smmd.Provider{Name: cfg.Provider.Name, Domain: cfg.Provider.Domain},
+				Provider: provider,
 				Type:     cfg.NetworkType,
 				Clusters: clusters,
 			},

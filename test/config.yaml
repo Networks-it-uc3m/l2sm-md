@@ -13,15 +13,19 @@
 # limitations under the License.
 
 # Address of your gRPC server
-serverAddress: "172.20.0.2:30051"
+serverAddress: "localhost:50051"
 
 # An example L2Network name if you're testing network creation
-networkName: "ping-network"
+networkName: "ping-network-2"
 
 # Provider information for both Network and Slice
 provider:
   name: "test-slice"
-  domain: "172.20.0.2"
+  domain: "172.18.0.2"
+  dnsPort: 30053
+  dnsGrpcPort: 30818
+  ofPort: 30663
+  sdnPort: 30808
 
 # Type of network you want to create
 networkType: "vnet"
@@ -31,18 +35,22 @@ namespace: "l2sm-system"
 # List of clusters that belong to this network or slice
 clusters:
   - name: "kind-worker-cluster-1"
-    apiKey: "https://172.20.0.3:6443"
-    bearerToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IlZtaVByTnREMjl2MTY4VnJQV1dZekxQTmItazdROWFtRGpPazVFREp0TVEifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNzQwNDEzNzgxLCJpYXQiOjE3NDA0MTAxODEsImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJsMnNtLXN5c3RlbSIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJsMnNtLWNvbnRyb2xsZXItbWFuYWdlciIsInVpZCI6IjNjMDUxNzg1LWFhOTAtNGJhOS04NWQ5LWE1NDM4NmE3ZWExNCJ9fSwibmJmIjoxNzQwNDEwMTgxLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6bDJzbS1zeXN0ZW06bDJzbS1jb250cm9sbGVyLW1hbmFnZXIifQ.xH2ROkkAb7Oaq4AuSkQx1eVF7H_Q-OdS4M1YmcLXA7iYmljiLOsg4dVBj31BzdkTs8xo1EpDcpWGeHn03l9dSkswnDOp6Ia3NlUBXZeniUu6GrLbs0L6_Nr2geFm9LdMdmgHEsoiPYsY9JlGE4vG8R_35OCuuvLPHO_dN9LHTCF3PLuIUxV57W5Jno-L7vPptJhXuXyYXIf5nqyVBT0YY2v6QgfgvROy_pRPjIjsZi9ZsvvZhXQaXsdWPDWlHDew5mPRSU_nMVE34zBebDT_e_qKkKmDSLOdtTyiz8_A75orXisq-wDVqOUMZqBmmzKvmv2mtmJtluCpzVdPf3QsMA"
+    apiKey: "https://172.18.0.3:6443"
+    bearerToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6Inp4dVZJWlBUNVJrMjFJTFZMUXVWRm1WcXlWbW11UDV4RktTZVVkSllCaE0ifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNzQ4MjQ4MzczLCJpYXQiOjE3NDQ2NDgzNzMsImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJsMnNtLXN5c3RlbSIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJsMnNtLWNvbnRyb2xsZXItbWFuYWdlciIsInVpZCI6ImVmYzk1MWVmLTFlZTMtNDNhOS1hMDRjLTUwNzFjNjZlM2NhNCJ9fSwibmJmIjoxNzQ0NjQ4MzczLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6bDJzbS1zeXN0ZW06bDJzbS1jb250cm9sbGVyLW1hbmFnZXIifQ.TsXfsyUsc9YoGlujshPGNg3y1UDW-Qy5rofdOnZlwtzW8xaAeDCUzYttxQnFavZ4uv0kqOxirEV2DaEAt-gaw2teIB6u526uTtwC17mncRorvgTpiDpKY2IIMHC7jYhijYs-KU90QMkUZyY7T4PI5GovUmZMWr1PaA7Dp4V0V5rSBhxzUb5E5Wuj4Df7afUJ1A-KKAyTfTqjP1A7xaEpXkZ1ut_mxgVIKdcdjFxTY3NPUSJwQDBOyCMEU9K-AfmPPFD0V9d8eBpLj7wU5TDlgl6zH1CGd2OkC8gW_EpUkZ8ET4fP7dkkukzp34JgubRzmbJTW2tZbbfM290zsq0klA"
     nodes:
       - "worker-cluster-1-control-plane"
     gatewayNode:
       name: "worker-cluster-1-control-plane"
-      ipAddress: "172.20.0.3"
+      ipAddress: "172.18.0.3"
+    addressPool: "10.1.3.0/24"
+    namespace: "lolo"
   - name: "kind-worker-cluster-2"
-    apiKey: "https://172.20.0.4:6443"
-    bearerToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImVsblZSWnZHVE1CbGRGM0x2RE5YenRUY0l3YnNwWGt0c01nbzBtbFFmUEUifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNzQwNDEzODIzLCJpYXQiOjE3NDA0MTAyMjMsImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJsMnNtLXN5c3RlbSIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJsMnNtLWNvbnRyb2xsZXItbWFuYWdlciIsInVpZCI6Ijk1ZWViZTNmLTc1ZjQtNDA5My1hODFiLTRhMTc1OWU0YzRiZSJ9fSwibmJmIjoxNzQwNDEwMjIzLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6bDJzbS1zeXN0ZW06bDJzbS1jb250cm9sbGVyLW1hbmFnZXIifQ.ZcKJ71ceEz7SnLv6FFAj_Jvj7Tv7wfJXX54MDdr_Zvex7GPO57vy0-bT1ssBOuBY98vtnn7H8XNGCHKXbRqkQvspJrwoLhOPfmxnk36vuxexSjZu-XgEjmTFPwYwVMLe_Y-3jNUV2mMwsQAjyRIqvao2LlPK-wHAHCWnVVMYPw6JCaxjAMS9i3EdzEsW2nxzUzTRIBVRxxLY7dU3zwClEjJBivF_Th57mZC7xNAt_CQRnc6xaw2L6kEX6PFMtNFZf9NlTozTU-BHxXnFvwVvA0a5j5Dc5dgjNZgK-dG2YWmgArf05YsgZakAGcmD5d4Zn2gjOUbhxNYbA9KKT3Zlhw"
+    apiKey: "https://172.18.0.4:6443"
+    bearerToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IlVYTU5KUjhPS2JkZTJsQ3JoV2QwNVV5V2JDRmtOTmdiNVBVeXVlSFZDN2cifQ.eyJhdWQiOlsiaHR0cHM6Ly9rdWJlcm5ldGVzLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwiXSwiZXhwIjoxNzQ4MjQ4MzQ3LCJpYXQiOjE3NDQ2NDgzNDcsImlzcyI6Imh0dHBzOi8va3ViZXJuZXRlcy5kZWZhdWx0LnN2Yy5jbHVzdGVyLmxvY2FsIiwia3ViZXJuZXRlcy5pbyI6eyJuYW1lc3BhY2UiOiJsMnNtLXN5c3RlbSIsInNlcnZpY2VhY2NvdW50Ijp7Im5hbWUiOiJsMnNtLWNvbnRyb2xsZXItbWFuYWdlciIsInVpZCI6ImM5MjcwNGM3LTljYWQtNDA4MS1hZjc1LTM5MzQ1YzlmODQzNiJ9fSwibmJmIjoxNzQ0NjQ4MzQ3LCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6bDJzbS1zeXN0ZW06bDJzbS1jb250cm9sbGVyLW1hbmFnZXIifQ.sfS1uW1lq8EngwPEJYrE9PXRP0fvEbsZ9LT7R6ofu7X65UywJTfDTEgBVde-zV6y806zvqOHZ0CmDe5QPODjkGw5xezIMOEhAOiROrWAfWaRVsZPBNoBPMKpnfldWh1zXP-ZijnjAF3xZ_Ix51chgXUMRQCD8FyKEWnPZBXvkuBff7jmqI1yq3_3c_79_oQmHRWotQx6UJ-gueiH6Ut46tyCF7sfvDorPSjQZeLsGiBVEtL2QVdxZ7dyL-LSbi-wzG8XTsrgLT2BXMCwGBIUP1XZH3jahvk9DVnlBlOdvatrlVV9JUfjbKebynOeOmt3FBF8h56znCOxIyPdns1mEw"
     nodes:
       - "worker-cluster-2-control-plane"
     gatewayNode:
       name: "worker-cluster-2-control-plane"
-      ipAddress: "172.20.0.4"
+      ipAddress: "172.18.0.4"
+    addressPool: "10.1.2.0/24"
+    namespace: "lala"

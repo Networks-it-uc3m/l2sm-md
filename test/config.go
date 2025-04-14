@@ -31,8 +31,12 @@ type Config struct {
 }
 
 type ProviderConfig struct {
-	Name   string `yaml:"name"`
-	Domain string `yaml:"domain"`
+	Name        string `yaml:"name"`
+	Domain      string `yaml:"domain"`
+	DnsPort     string `yaml:"dnsPort"`
+	SdnPort     string `yaml:"sdnPort"`
+	OfPort      string `yaml:"ofPort"`
+	DnsGrpcPort string `yaml:"dnsGrpcPort"`
 }
 
 type ClusterConfig struct {
@@ -41,6 +45,8 @@ type ClusterConfig struct {
 	BearerToken string     `yaml:"bearerToken"`
 	Nodes       []string   `yaml:"nodes"`
 	GatewayNode NodeConfig `yaml:"gatewayNode"`
+	Namespace   string     `yaml:"namespace"`
+	AddressPool string     `yaml:"addressPool"`
 }
 
 type NodeConfig struct {

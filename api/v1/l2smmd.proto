@@ -32,6 +32,8 @@ message Cluster {
     RestConfig rest_config = 2;
     Overlay overlay = 3;
     Node gateway_node = 4;
+    string namespace = 5;
+    string pod_address_pool = 6;
 }
 
 message Overlay {

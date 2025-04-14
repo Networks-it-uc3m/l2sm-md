@@ -26,8 +26,11 @@ resources:
 # [WEBHOOK] To enable webhook, uncomment all the sections with [WEBHOOK] prefix including the one in
 # crd/kustomization.yaml
 - ../idcoprovider
+- ../../dns/config/rbac
+- ../../dns/config/server
 # - ../tmp
 # - ../server
-# patches:
+patches:
+- path: coredns-service-patch.yaml
 # - path: server_patch.yaml
-
+- path: idco-service-patch.yaml

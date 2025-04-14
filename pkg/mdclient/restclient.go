@@ -167,7 +167,7 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 				clusterNames[index] = cluster.Name
 			}
 			sliceLinks = topologygenerator.GenerateTopology(clusterNames)
-			fmt.Println(sliceLinks)
+			// fmt.Println(sliceLinks)
 		}
 		for _, cluster := range sliceClusters {
 			clusterMaps[cluster.GetName()] = l2sminterface.NodeConfig{
@@ -208,7 +208,7 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 		if isMultiCluster {
 
 			clusterNeighbors := []l2sminterface.Neighbor{}
-			fmt.Println(sliceLinks)
+			// fmt.Println(sliceLinks)
 			for _, link := range sliceLinks {
 				switch cluster.GetName() {
 				case link.EndpointA:
@@ -236,8 +236,8 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 
 			resource := l2sminterface.GetGVR(l2sminterface.NetworkEdgeDevice)
 
-			fmt.Println(unstructuredNED)
-			fmt.Println(resource)
+			// fmt.Println(unstructuredNED)
+			// fmt.Println(resource)
 			_, err = dynClient.Resource(resource).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: unstructuredNED}, metav1.CreateOptions{})
 			if err != nil {
 				return fmt.Errorf("error creating resource: %v", err)
@@ -252,7 +252,7 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 			return fmt.Errorf("failed to assign unstructured l2network: %v", err)
 		}
 
-		fmt.Println(unstructuredOverlay)
+		// fmt.Println(unstructuredOverlay)
 		_, err = dynClient.Resource(l2sminterface.GetGVR(l2sminterface.Overlay)).Namespace(namespace).Create(context.Background(), &unstructured.Unstructured{Object: unstructuredOverlay}, metav1.CreateOptions{})
 		if err != nil {
 			return fmt.Errorf("error creating resource: %v", err)

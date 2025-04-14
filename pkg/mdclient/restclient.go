@@ -103,6 +103,8 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network, namespace st
 
 		resource := l2sminterface.GetGVR(l2sminterface.L2Network)
 
+		namespace = utils.DefaultIfEmpty(cluster.Namespace, namespace)
+
 		_, err = dynClient.Resource(resource).Namespace(namespace).Create(context.Background(), unstructuredObj, metav1.CreateOptions{})
 		if err != nil {
 			return fmt.Errorf("error creating resource: %v", err)

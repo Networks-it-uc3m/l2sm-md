@@ -1,5 +1,5 @@
 # Image URL to use for building/pushing
-IMG ?= alexdecb/l2sm-md:0.3
+IMG ?= alexdecb/l2sm-md:0.4
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.29.0
 
@@ -123,14 +123,23 @@ setup-dev: create-control-plane create-workers add-cni install-l2sm deploy-dev
 
 .PHONY: create-control-plane
 create-control-plane:
-	$(KIND) create cluster --config ./examples/quickstart/control-plane-cluster.yaml
+	if $(KIND) get clusters | grep -q "control-plane"; then \
+		echo "Cluster 'control-plane' already exists. Skipping creation."; \
+	else \
+		$(KIND) create cluster --config ./examples/quickstart/control-plane-cluster.yaml; \
+	fi
 
 .PHONY: create-workers
 create-workers:
 	for number in $(shell seq 1 ${WORKER_CLUSTER_NUM}); do \
-		$(KIND) create cluster --config ./examples/quickstart/worker-cluster.yaml --name worker-cluster-$$number; \
+		if $(KIND) get clusters | grep -q "worker-cluster-$$number"; then \
+			echo "Cluster 'worker-cluster-$$number' already exists. Skipping creation."; \
+		else \
+			$(KIND) create cluster --config ./examples/quickstart/worker-cluster.yaml --name worker-cluster-$$number; \
+		fi; \
 		$(KUBECTL) config view -o jsonpath='{.clusters[?(@.name == "kind-worker-cluster-'$$number'")].cluster.certificate-authority-data}' --raw | base64 -d > config/certs/kind-worker-cluster-$$number.key; \
 	done
+
 
 .PHONY: deploy-dev
 deploy-dev: apply-cert kustomize

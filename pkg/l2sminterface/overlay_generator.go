@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
-	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
-	"github.com/Networks-it-uc3m/l2sm-md/pkg/topologygenerator"
+	"github.com/Networks-it-uc3m/l2sc-es/api/v1/l2sces"
+	"github.com/Networks-it-uc3m/l2sc-es/pkg/topologygenerator"
 	"gopkg.in/yaml.v2"
 
 	corev1 "k8s.io/api/core/v1"
@@ -94,7 +94,7 @@ func (overlayGenerator *OverlayGenerator) CreateResource() ([]byte, error) {
 
 // func (overlayGenerator *OverlayGenerator) AddValues(byteValues []byte) error {
 
-// 	values := l2smmd.Overlay{}
+// 	values := l2sces.Overlay{}
 // 	err := yaml.Unmarshal(byteValues, &values)
 // 	if err != nil {
 // 		return fmt.Errorf("could not unmarshal input values. err: %v", err)
@@ -104,7 +104,7 @@ func (overlayGenerator *OverlayGenerator) CreateResource() ([]byte, error) {
 // }
 
 func (overlayGenerator *OverlayGenerator) AddValues(byteValues []byte) error {
-	// Create an instance of l2smmd.Overlay to hold the unmarshaled values
+	// Create an instance of l2sces.Overlay to hold the unmarshaled values
 	values := l2smv1.TopologySpec{}
 
 	// Use yaml.Unmarshal to populate the values, passing its pointer
@@ -118,7 +118,7 @@ func (overlayGenerator *OverlayGenerator) AddValues(byteValues []byte) error {
 	return nil
 }
 
-func ConstructOverlayFromL2smmd(overlay *l2smmd.Overlay) *l2smv1.Overlay {
+func ConstructOverlayFromL2smmd(overlay *l2sces.Overlay) *l2smv1.Overlay {
 
 	links := make([]l2smv1.Link, len(overlay.Links))
 
@@ -183,7 +183,7 @@ func defaultSwitchTemplate() *l2smv1.SwitchTemplateSpec {
 func defaultProvider() *l2smv1.ProviderSpec {
 	return &l2smv1.ProviderSpec{
 		Name:    "l2sm-sdn",
-		Domain:  "l2sm-controller-service.l2sm-system.svc",
+		Domain:  []string{"l2sm-controller-service.l2sm-system.svc"},
 		OFPort:  "6633",
 		SDNPort: "8181",
 	}

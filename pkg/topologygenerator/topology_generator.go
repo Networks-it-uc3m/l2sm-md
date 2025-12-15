@@ -15,16 +15,16 @@
 package topologygenerator
 
 import (
-	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
+	"github.com/Networks-it-uc3m/l2sc-es/api/v1/l2sces"
 )
 
-func GenerateTopology(nodes []string) []*l2smmd.Link {
+func GenerateTopology(nodes []string) []*l2sces.Link {
 	numNodes := len(nodes)
-	links := make([]*l2smmd.Link, 0, numNodes*(numNodes-1)/2)
+	links := make([]*l2sces.Link, 0, numNodes*(numNodes-1)/2)
 
 	for i := 0; i < numNodes; i++ {
 		for j := i + 1; j < numNodes; j++ {
-			link := &l2smmd.Link{
+			link := &l2sces.Link{
 				EndpointA: nodes[i],
 				EndpointB: nodes[j],
 			}

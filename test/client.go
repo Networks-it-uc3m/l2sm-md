@@ -35,7 +35,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	// Adjust import to point to where you keep your proto-generated code
-	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
+	"github.com/Networks-it-uc3m/l2sc-es/api/v1/l2sces"
 )
 
 // main is the entry point for this client application
@@ -66,12 +66,12 @@ func main() {
 	defer conn.Close()
 
 	// Create a client for our L2SMMultiDomainService
-	client := l2smmd.NewL2SMMultiDomainServiceClient(conn)
+	client := l2sces.NewL2SMMultiDomainServiceClient(conn)
 	// Build the cluster list from config
-	clusters := make([]*l2smmd.Cluster, 0, len(cfg.Clusters))
+	clusters := make([]*l2sces.Cluster, 0, len(cfg.Clusters))
 	fmt.Println(cfg.Clusters[0].GatewayNode)
 
-	provider := &l2smmd.Provider{
+	provider := &l2sces.Provider{
 		Name:        cfg.Provider.Name,
 		Domain:      cfg.Provider.Domain,
 		DnsPort:     cfg.Provider.DnsPort,
@@ -82,18 +82,18 @@ func main() {
 
 	for _, c := range cfg.Clusters {
 
-		gatewayNode := &l2smmd.Node{
+		gatewayNode := &l2sces.Node{
 			Name:      c.GatewayNode.Name,
 			IpAddress: c.GatewayNode.IPAddress,
 		}
 
-		clusters = append(clusters, &l2smmd.Cluster{
+		clusters = append(clusters, &l2sces.Cluster{
 			Name: c.Name,
-			RestConfig: &l2smmd.RestConfig{
+			RestConfig: &l2sces.RestConfig{
 				BearerToken: c.BearerToken,
 				ApiKey:      c.ApiKey,
 			},
-			Overlay: &l2smmd.Overlay{
+			Overlay: &l2sces.Overlay{
 				// If you have pre-defined links, set them here. Otherwise they get generated automatically.
 				Nodes: c.Nodes,
 			},
@@ -112,9 +112,9 @@ func main() {
 		fmt.Println("Creating Slice...")
 
 		// Build the create request
-		createSliceReq := &l2smmd.CreateSliceRequest{
+		createSliceReq := &l2sces.CreateSliceRequest{
 			Namespace: *namespace,
-			Slice: &l2smmd.Slice{
+			Slice: &l2sces.Slice{
 				Provider: provider,
 				Clusters: clusters,
 			},
@@ -132,9 +132,9 @@ func main() {
 	if *testSliceDelete {
 		fmt.Println("Deleting Slice...")
 
-		deleteSliceReq := &l2smmd.DeleteSliceRequest{
+		deleteSliceReq := &l2sces.DeleteSliceRequest{
 			Namespace: *namespace,
-			Slice: &l2smmd.Slice{
+			Slice: &l2sces.Slice{
 				Provider: provider,
 				Clusters: clusters,
 				// If links are necessary for the request, fill them here as well
@@ -153,9 +153,9 @@ func main() {
 	if *testNetworkCreate {
 		fmt.Println("Creating L2Network...")
 
-		createNetworkReq := &l2smmd.CreateNetworkRequest{
+		createNetworkReq := &l2sces.CreateNetworkRequest{
 			Namespace: *namespace,
-			Network: &l2smmd.L2Network{
+			Network: &l2sces.L2Network{
 				Name:     cfg.NetworkName,
 				Provider: provider,
 				Type:     cfg.NetworkType,
@@ -177,9 +177,9 @@ func main() {
 	if *testNetworkDelete {
 		fmt.Println("Deleting L2Network...")
 
-		deleteNetworkReq := &l2smmd.DeleteNetworkRequest{
+		deleteNetworkReq := &l2sces.DeleteNetworkRequest{
 			Namespace: *namespace,
-			Network: &l2smmd.L2Network{
+			Network: &l2sces.L2Network{
 				Name:     cfg.NetworkName,
 				Provider: provider,
 				Type:     cfg.NetworkType,

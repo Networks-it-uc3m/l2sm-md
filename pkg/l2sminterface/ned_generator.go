@@ -16,7 +16,7 @@ package l2sminterface
 
 import (
 	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
-	"github.com/Networks-it-uc3m/l2sm-md/internal/env"
+	"github.com/Networks-it-uc3m/l2sc-es/internal/env"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -100,7 +100,7 @@ func (nedGenerator *NEDGenerator) ConstructNED(nedValues NEDValues) *l2smv1.Netw
 		Spec: l2smv1.NetworkEdgeDeviceSpec{
 			Provider: &l2smv1.ProviderSpec{
 				Name:        nedGenerator.Provider.Name,
-				Domain:      nedGenerator.Provider.Domain,
+				Domain:      []string{nedGenerator.Provider.Domain},
 				OFPort:      nedGenerator.Provider.OFPort,
 				SDNPort:     nedGenerator.Provider.SDNPort,
 				DNSPort:     nedGenerator.Provider.DNSPort,

@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Networks-it-uc3m/l2sm-md/pkg/operator"
+	"github.com/Networks-it-uc3m/l2sc-es/pkg/operator"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )

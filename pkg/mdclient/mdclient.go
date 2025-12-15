@@ -17,7 +17,7 @@ package mdclient
 import (
 	"errors"
 
-	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
+	"github.com/Networks-it-uc3m/l2sc-es/api/v1/l2sces"
 	"k8s.io/client-go/rest"
 )
 
@@ -28,10 +28,10 @@ const (
 )
 
 type MDClient interface {
-	CreateNetwork(network *l2smmd.L2Network, namespace string) error
-	DeleteNetwork(network *l2smmd.L2Network, namespace string) error
-	CreateSlice(slice *l2smmd.Slice, namespace string) error
-	DeleteSlice(slice *l2smmd.Slice, namespace string) error
+	CreateNetwork(network *l2sces.L2Network, namespace string) error
+	DeleteNetwork(network *l2sces.L2Network, namespace string) error
+	CreateSlice(slice *l2sces.Slice, namespace string) error
+	DeleteSlice(slice *l2sces.Slice, namespace string) error
 }
 
 func NewClient(clientType ClientType, config ...interface{}) (MDClient, error) {

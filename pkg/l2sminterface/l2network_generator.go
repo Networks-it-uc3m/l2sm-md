@@ -20,12 +20,12 @@ import (
 	"net"
 
 	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
-	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
-	"github.com/Networks-it-uc3m/l2sm-md/pkg/utils"
+	"github.com/Networks-it-uc3m/l2sc-es/api/v1/l2sces"
+	"github.com/Networks-it-uc3m/l2sc-es/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func ConstructL2NetworkFromL2smmd(network *l2smmd.L2Network) (*l2smv1.L2Network, error) {
+func ConstructL2NetworkFromL2smmd(network *l2sces.L2Network) (*l2smv1.L2Network, error) {
 
 	l2network := &l2smv1.L2Network{
 		TypeMeta: metav1.TypeMeta{
@@ -40,7 +40,7 @@ func ConstructL2NetworkFromL2smmd(network *l2smmd.L2Network) (*l2smv1.L2Network,
 			Config: &network.PodCidr,
 			Provider: &l2smv1.ProviderSpec{
 				Name:        network.Provider.Name,
-				Domain:      network.Provider.Domain,
+				Domain:      []string{network.Provider.Domain},
 				SDNPort:     network.Provider.SdnPort,
 				OFPort:      network.Provider.OfPort,
 				DNSGRPCPort: network.Provider.DnsGrpcPort,

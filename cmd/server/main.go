@@ -26,8 +26,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
-	"github.com/Networks-it-uc3m/l2sm-md/pkg/mdclient"
+	"github.com/Networks-it-uc3m/l2sc-es/api/v1/l2sces"
+	"github.com/Networks-it-uc3m/l2sc-es/pkg/mdclient"
 )
 
 func main() {
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// Register the server with the gRPC server
-	l2smmd.RegisterL2SMMultiDomainServiceServer(grpcServer, &server{MDClient: restcli})
+	l2sces.RegisterL2SMMultiDomainServiceServer(grpcServer, &server{MDClient: restcli})
 
 	log.Printf("Server listening at %v", lis.Addr())
 

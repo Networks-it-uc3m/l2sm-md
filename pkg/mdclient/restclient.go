@@ -24,11 +24,11 @@ import (
 
 	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
 
-	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
-	"github.com/Networks-it-uc3m/l2sm-md/pkg/l2sminterface"
-	"github.com/Networks-it-uc3m/l2sm-md/pkg/operator"
-	"github.com/Networks-it-uc3m/l2sm-md/pkg/topologygenerator"
-	"github.com/Networks-it-uc3m/l2sm-md/pkg/utils"
+	"github.com/Networks-it-uc3m/l2sc-es/api/v1/l2sces"
+	"github.com/Networks-it-uc3m/l2sc-es/pkg/l2sminterface"
+	"github.com/Networks-it-uc3m/l2sc-es/pkg/operator"
+	"github.com/Networks-it-uc3m/l2sc-es/pkg/topologygenerator"
+	"github.com/Networks-it-uc3m/l2sc-es/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -41,7 +41,7 @@ type RestClient struct {
 	ManagerClusterConfig rest.Config
 }
 
-func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network, namespace string) error {
+func (restcli *RestClient) CreateNetwork(network *l2sces.L2Network, namespace string) error {
 
 	fmt.Printf("Creating network %s", network.GetName())
 	namespace = utils.DefaultIfEmpty(namespace, "default")
@@ -115,7 +115,7 @@ func (restcli *RestClient) CreateNetwork(network *l2smmd.L2Network, namespace st
 	return nil
 }
 
-func (restcli *RestClient) DeleteNetwork(network *l2smmd.L2Network, namespace string) error {
+func (restcli *RestClient) DeleteNetwork(network *l2sces.L2Network, namespace string) error {
 
 	clusterCrts, err := operator.GetClusterCertificates(&restcli.ManagerClusterConfig)
 
@@ -149,7 +149,7 @@ func (restcli *RestClient) DeleteNetwork(network *l2smmd.L2Network, namespace st
 
 }
 
-func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) error {
+func (restcli *RestClient) CreateSlice(slice *l2sces.Slice, namespace string) error {
 
 	fmt.Printf("Creating slice %s", slice)
 
@@ -263,7 +263,7 @@ func (restcli *RestClient) CreateSlice(slice *l2smmd.Slice, namespace string) er
 	return nil
 }
 
-func (restcli *RestClient) DeleteSlice(slice *l2smmd.Slice, namespace string) error {
+func (restcli *RestClient) DeleteSlice(slice *l2sces.Slice, namespace string) error {
 	return nil
 }
 

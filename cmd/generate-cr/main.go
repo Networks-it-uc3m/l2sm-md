@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Networks-it-uc3m/l2sm-md/pkg/l2sminterface"
+	"github.com/Networks-it-uc3m/l2sc-es/pkg/l2sminterface"
 )
 
 func main() {

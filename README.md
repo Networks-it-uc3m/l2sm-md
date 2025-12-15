@@ -17,12 +17,12 @@ For more in-depth concepts about L2S-M and inter-domain functionalities, visit t
 
 Deploy directly from GitHub:
 ```bash
-kubectl apply -f https://github.com/Networks-it-uc3m/l2sm-md/raw/refs/heads/development/deployments/l2smmd-deployment.yaml
+kubectl apply -f https://github.com/Networks-it-uc3m/l2sc-es/raw/refs/heads/development/deployments/l2sces-deployment.yaml
 ```
 
 Or locally:
 ```bash
-kubectl apply -f ./deployments/l2smmd-deployment.yaml
+kubectl apply -f ./deployments/l2sces-deployment.yaml
 ```
 
 ### Prerequisites
@@ -45,7 +45,7 @@ Default deployment includes DNS and IDCO services in namespace `l2sm-system`. Cu
 
 ## 🎯 Usage
 
-Once deployed, interact via the `l2sm-grpc-server`. Reference the gRPC API spec in [`./api/v1/l2smmd.proto`](./api/v1/l2smmd.proto) and explore client examples in [`./test/client.go`](./test/client.go).
+Once deployed, interact via the `l2sm-grpc-server`. Reference the gRPC API spec in [`./api/v1/l2sces.proto`](./api/v1/l2sces.proto) and explore client examples in [`./test/client.go`](./test/client.go).
 
 ### Configuring Managed Clusters
 Prepare the following:

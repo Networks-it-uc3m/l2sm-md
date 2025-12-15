@@ -3,12 +3,12 @@ package l2sminterface
 import (
 	"fmt"
 
-	"github.com/Networks-it-uc3m/l2sm-md/api/v1/l2smmd"
+	"github.com/Networks-it-uc3m/l2sc-es/api/v1/l2sces"
 )
 
-func GetWorkloadPatchInstructions(networkName string) []*l2smmd.FieldPatch {
+func GetWorkloadPatchInstructions(networkName string) []*l2sces.FieldPatch {
 
-	patches := []*l2smmd.FieldPatch{
+	patches := []*l2sces.FieldPatch{
 		{Path: "spec.template.metadata.labels.l2sm", Value: "true"},
 		{Path: "spec.template.metadata.labels.l2sm/app", Value: "<workload-name>"},
 		{Path: "spec.template.metadata.annotations.l2sm/networks", Value: networkName},

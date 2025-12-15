@@ -108,19 +108,19 @@ build: fmt vet
 	go build -o bin/manager cmd/main.go
 
 
-.PHONY: build-codeco
+.PHONY: build-nemo
 build-installer: kustomize ## Generate a consolidated YAML with CRDs and deployment.
 	echo "" > deployments/l2sces-deployment.yaml
 	echo "---" >> deployments/l2sces-deployment.yaml  # Add a document separator before appending
 	cd config/manager && $(KUSTOMIZE) edit set image manager=${IMG}
-	$(KUSTOMIZE) build config/codeco >> deployments/l2sces-deployment.yaml
+	$(KUSTOMIZE) build config/nemo >> deployments/l2sces-deployment.yaml
 
 .PHONY: build-installer
 build-installer: kustomize ## Generate a consolidated YAML with CRDs and deployment.
 	echo "" > deployments/l2sces-deployment.yaml
 	echo "---" >> deployments/l2sces-deployment.yaml  # Add a document separator before appending
 	cd config/server && $(KUSTOMIZE) edit set image server=${IMG}
-	$(KUSTOMIZE) build config/default >> deployments/l2sces-deployment.yaml
+	$(KUSTOMIZE) build config/codeco >> deployments/l2sces-deployment.yaml
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.

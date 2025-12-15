@@ -120,7 +120,7 @@ build-installer: kustomize ## Generate a consolidated YAML with CRDs and deploym
 	echo "" > deployments/l2sces-deployment.yaml
 	echo "---" >> deployments/l2sces-deployment.yaml  # Add a document separator before appending
 	cd config/server && $(KUSTOMIZE) edit set image server=${IMG}
-	$(KUSTOMIZE) build config/codeco >> deployments/l2sces-deployment.yaml
+	$(KUSTOMIZE) build config/default >> deployments/l2sces-deployment.yaml
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
@@ -134,11 +134,11 @@ vet: ## Run go vet against code.
 .PHONY: deploy
 deploy: kustomize ## Deploy server to the K8s cluster specified in ~/.kube/config.
 	cd config/server && $(KUSTOMIZE) edit set image server=${IMG}
-	$(KUSTOMIZE) build config/codeco | $(KUBECTL) apply -f - 
+	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f - 
 
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy server from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/codeco | $(KUBECTL) delete --ignore-not-found=true -f -
+	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=true -f -
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.

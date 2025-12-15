@@ -92,10 +92,10 @@ generate-proto: install-tools ## Generate gRPC code from .proto file.
 .PHONY: run-server
 include .env
 export $(shell sed 's/=.*//' .env)
-run: 
+run-server: 
 	go run ./cmd/server
 
-.PHONY: run-manager
+.PHONY: run
 include .env
 export $(shell sed 's/=.*//' .env)
 run: 
@@ -105,7 +105,7 @@ run:
 build: fmt vet 
 	go build -o $(LOCALBIN)/server ./cmd/server/
 	go build -o $(LOCALBIN)/apply-cert ./cmd/apply-cert/
-		go build -o $(LOCALBIN)/server ./cmd/
+	go build -o bin/manager cmd/main.go
 
 
 .PHONY: build-codeco
@@ -134,11 +134,11 @@ vet: ## Run go vet against code.
 .PHONY: deploy
 deploy: kustomize ## Deploy server to the K8s cluster specified in ~/.kube/config.
 	cd config/server && $(KUSTOMIZE) edit set image server=${IMG}
-	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f - 
+	$(KUSTOMIZE) build config/codeco | $(KUBECTL) apply -f - 
 
 .PHONY: undeploy
 undeploy: kustomize ## Undeploy server from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
-	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=true -f -
+	$(KUSTOMIZE) build config/codeco | $(KUBECTL) delete --ignore-not-found=true -f -
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -216,6 +216,8 @@ apply-cert: build
 		echo "No certificate files to process."; \
 	fi
 
+.PHONY: all
+all: build
 
 .PHONY: install-l2sm
 install-l2sm:

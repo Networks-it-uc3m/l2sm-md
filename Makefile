@@ -124,7 +124,7 @@ build-installer: manifests generate kustomize ## Generate a consolidated YAML wi
 build-codeco: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
 	echo "" > deployments/codeco-deployment.yaml
 	echo "---" >> deployments/codeco-deployment.yaml  # Add a document separator before appending
-	cd config/default && $(KUSTOMIZE) edit set image controller=${IMG}
+	cd config/codeco && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/codeco >> deployments/codeco-deployment.yaml
 
 .PHONY: fmt

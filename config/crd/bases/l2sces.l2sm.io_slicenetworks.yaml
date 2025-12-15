@@ -53,25 +53,87 @@ spec:
           spec:
             description: spec defines the desired state of SliceNetwork
             properties:
-              foo:
-                description: foo is an example field of SliceNetwork. Edit slicenetwork_types.go
-                  to remove/update
+              clusters:
+                description: |-
+                  Clusters is an array of configurations. The controller will create an L2Network
+                  in each of these clusters based on the provided Name, Type, and Provider.
+                items:
+                  type: string
+                minItems: 1
+                type: array
+              provider:
+                description: Provider defines the provider's name and domain for the
+                  network in this cluster.
+                properties:
+                  dnsGrpcPort:
+                    default: "30818"
+                    description: gRPC management port for DNS service (used for adding/modifying
+                      DNS entries)
+                    type: string
+                  dnsPort:
+                    default: "30053"
+                    description: |-
+                      DNS service configuration
+                      DNS protocol port (used for DNS queries via tools like dig)
+                    type: string
+                  domain:
+                    items:
+                      type: string
+                    type: array
+                  name:
+                    type: string
+                  ofPort:
+                    default: "6633"
+                    type: string
+                  sdnPort:
+                    default: "30808"
+                    type: string
+                required:
+                - domain
+                - name
+                type: object
+              type:
+                description: Type specifies the type of L2Network to create in this
+                  cluster (e.g., ext-vnet, vnet, vlink).
+                enum:
+                - ext-vnet
+                - vnet
+                - vlink
                 type: string
+                x-kubernetes-preserve-unknown-fields: true
+            required:
+            - clusters
+            - type
             type: object
           status:
             description: status defines the observed state of SliceNetwork
             properties:
+              clusterStatuses:
+                description: ClusterStatuses tracks the status of the L2Network provisioning
+                  in each defined cluster.
+                items:
+                  description: SliceClusterStatus tracks the state of the L2Network
+                    in a specific cluster.
+                  properties:
+                    clusterName:
+                      description: ClusterName is the name of the cluster this status
+                        refers to.
+                      type: string
+                    message:
+                      description: Message provides details about the status, useful
+                        for debugging errors.
+                      type: string
+                    status:
+                      description: Status represents the current state of the L2Network
+                        in that cluster (e.g., "Ready", "Pending", "Error").
+                      type: string
+                  required:
+                  - clusterName
+                  type: object
+                type: array
               conditions:
-                description: |-
-                  conditions represent the current state of the SliceNetwork resource.
-                  Each condition has a unique type and reflects the status of a specific aspect of the resource.
-
-                  Standard condition types include:
-                  - "Available": the resource is fully functional
-                  - "Progressing": the resource is being created or updated
-                  - "Degraded": the resource failed to reach or maintain its desired state
-
-                  The status of each condition is one of True, False, or Unknown.
+                description: Conditions represent the current global state of the
+                  SliceNetwork resource.
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.

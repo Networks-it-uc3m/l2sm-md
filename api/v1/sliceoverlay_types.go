@@ -17,49 +17,80 @@ limitations under the License.
 package v1
 
 import (
+	l2smv1 "github.com/Networks-it-uc3m/L2S-M/api/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+// OverlayLink defines a connection between two clusters in the slice.
+// This translates to "Neighbors" in the NetworkEdgeDevice.
+type OverlayLink struct {
+	// EndpointA is the Name of the first cluster node
+	EndpointA string `json:"endpointA"`
+	// EndpointB is the Name of the second cluster node
+	EndpointB string `json:"endpointB"`
+}
+
+// OverlayNode defines a specific cluster participating in the slice.
+type OverlayCluster struct {
+	// Name of the cluster. This must match the cluster name in your kubeconfig/targeting logic.
+	Name string `json:"name"`
+
+	// Gateway is the public IP or Domain where this node's NED can be reached.
+	// This maps to 'NeighborSpec.Domain' for other nodes and 'NodeConfigSpec.IPAddress' for itself.
+	Gateway *l2smv1.NodeConfigSpec `json:"gateway,omitempty"`
+}
+
+// OverlayTopology defines the graph of the network.
+type OverlayTopology struct {
+	// List of clusters participating in this overlay
+	Nodes []OverlayCluster `json:"nodes"`
+
+	// List of connections between the clusters
+	Links []OverlayLink `json:"links,omitempty"`
+}
+
 // SliceOverlaySpec defines the desired state of SliceOverlay
 type SliceOverlaySpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
 
-	// foo is an example field of SliceOverlay. Edit sliceoverlay_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
+	// Provider contains the SDN Controller configuration (global for the slice).
+	// This will be copied to every NetworkEdgeDevice.
+	Provider *l2smv1.ProviderSpec `json:"provider,omitempty"`
+
+	// SwitchTemplate describes the virtual switch pod that will be deployed in every cluster.
+	// This ensures all clusters in the slice run the same switch configuration.
+	SwitchTemplate *l2smv1.SwitchTemplateSpec `json:"switchTemplate,omitempty"`
+
+	// Topology defines the clusters involved and how they connect.
+	Topology *OverlayTopology `json:"topology"`
 }
 
 // SliceOverlayStatus defines the observed state of SliceOverlay.
 type SliceOverlayStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 
-	// For Kubernetes API conventions, see:
-	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
-
-	// conditions represent the current state of the SliceOverlay resource.
-	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
-	//
-	// Standard condition types include:
-	// - "Available": the resource is fully functional
-	// - "Progressing": the resource is being created or updated
-	// - "Degraded": the resource failed to reach or maintain its desired state
-	//
-	// The status of each condition is one of True, False, or Unknown.
+	// Conditions represent the current state of the SliceOverlay resource.
 	// +listType=map
 	// +listMapKey=type
 	// +optional
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// Number of NetworkEdgeDevices successfully deployed
+	DeployedSwitches int32 `json:"deployedSwitches,omitempty"`
+
+	// Overall health of the slice connectivity
+	Phase string `json:"phase,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="PHASE",type="string",JSONPath=".status.phase"
+// +kubebuilder:printcolumn:name="SWITCHES",type="integer",JSONPath=".status.deployedSwitches"
+// +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 
 // SliceOverlay is the Schema for the sliceoverlays API
 type SliceOverlay struct {

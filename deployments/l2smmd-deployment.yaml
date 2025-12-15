@@ -277,7 +277,7 @@ spec:
         app: l2sm
     spec:
       containers:
-      - image: alexdecb/l2sm-md:0.3
+      - image: alexdecb/l2sc-es:0.3
         imagePullPolicy: IfNotPresent
         name: server-container
         ports:

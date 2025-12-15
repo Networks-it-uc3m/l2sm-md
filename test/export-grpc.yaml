@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: l2sm-grpc-service
+  namespace: l2sm-system
+spec:
+  type: NodePort
+  selector:
+    app: l2sm
+  ports:
+    - protocol: TCP
+      port: 50051        # Port exposed by the service internally
+      targetPort: 50051  # Port the container is listening on
+      nodePort: 30051    # External port on the node

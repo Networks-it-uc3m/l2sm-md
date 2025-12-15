@@ -1,5 +1,5 @@
 # Image URL to use for building/pushing
-IMG ?= alexdecb/l2sm-md:0.4
+IMG ?= alexdecb/l2sc-es:0.4
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.29.0
 
@@ -21,7 +21,7 @@ CONTAINER_TOOL ?= docker
 SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
-REPOSITORY=l2sm-md
+REPOSITORY=l2sc-es
 ## Location to install dependencies to
 LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
@@ -74,25 +74,40 @@ help: ## Display this help.
 .PHONY: generate-proto
 export PATH := $(PATH):$(LOCALBIN)
 generate-proto: install-tools ## Generate gRPC code from .proto file.
-	protoc -I=api/v1 --go_out=paths=source_relative:./api/v1/l2smmd --go-grpc_out=paths=source_relative:./api/v1/l2smmd api/v1/l2smmd.proto
+	protoc -I=api/v1 --go_out=paths=source_relative:./api/v1/l2sces --go-grpc_out=paths=source_relative:./api/v1/l2sces api/v1/l2sces.proto
 
-.PHONY: run
+.PHONY: run-server
 include .env
 export $(shell sed 's/=.*//' .env)
 run: 
 	go run ./cmd/server
 
+.PHONY: run-manager
+include .env
+export $(shell sed 's/=.*//' .env)
+run: 
+	go run ./cmd/main.go
+
 .PHONY: build
 build: fmt vet 
 	go build -o $(LOCALBIN)/server ./cmd/server/
 	go build -o $(LOCALBIN)/apply-cert ./cmd/apply-cert/
+		go build -o $(LOCALBIN)/server ./cmd/
+
+
+.PHONY: build-codeco
+build-installer: kustomize ## Generate a consolidated YAML with CRDs and deployment.
+	echo "" > deployments/l2sces-deployment.yaml
+	echo "---" >> deployments/l2sces-deployment.yaml  # Add a document separator before appending
+	cd config/manager && $(KUSTOMIZE) edit set image manager=${IMG}
+	$(KUSTOMIZE) build config/codeco >> deployments/l2sces-deployment.yaml
 
 .PHONY: build-installer
 build-installer: kustomize ## Generate a consolidated YAML with CRDs and deployment.
-	echo "" > deployments/l2smmd-deployment.yaml
-	echo "---" >> deployments/l2smmd-deployment.yaml  # Add a document separator before appending
+	echo "" > deployments/l2sces-deployment.yaml
+	echo "---" >> deployments/l2sces-deployment.yaml  # Add a document separator before appending
 	cd config/server && $(KUSTOMIZE) edit set image server=${IMG}
-	$(KUSTOMIZE) build config/default >> deployments/l2smmd-deployment.yaml
+	$(KUSTOMIZE) build config/default >> deployments/l2sces-deployment.yaml
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
@@ -194,7 +209,7 @@ install-l2sm:
 		$(KUBECTL) --context kind-worker-cluster-$$number wait --for=condition=Ready pods --all -A --timeout=300s; \
 	done; \
 	for number in $(shell seq 1 ${WORKER_CLUSTER_NUM}); do \
-		$(KUBECTL) --context kind-worker-cluster-$$number apply -f https://github.com/Networks-it-uc3m/L2S-M/raw/refs/heads/development/deployments/l2sm-deployment.yaml; \
+		$(KUBECTL) --context kind-worker-cluster-$$number apply -f https://raw.githubusercontent.com/Networks-it-uc3m/L2S-M/refs/heads/main/deployments/l2sm-deployment.yaml; \
 	done
 
 .PHONY: add-cni

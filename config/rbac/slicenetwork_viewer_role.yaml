@@ -25,12 +25,12 @@ metadata:
   labels:
     app.kubernetes.io/name: l2sces-init
     app.kubernetes.io/managed-by: kustomize
-  name: sliceoverlay-viewer-role
+  name: slicenetwork-viewer-role
 rules:
 - apiGroups:
   - l2sces.l2sm.io
   resources:
-  - sliceoverlays
+  - slicenetworks
   verbs:
   - get
   - list
@@ -38,6 +38,6 @@ rules:
 - apiGroups:
   - l2sces.l2sm.io
   resources:
-  - sliceoverlays/status
+  - slicenetworks/status
   verbs:
   - get

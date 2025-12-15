@@ -107,18 +107,25 @@ build: manifests generate fmt vet
 
 
 .PHONY: build-nemo
-build-installer: kustomize ## Generate a consolidated YAML with CRDs and deployment.
-	echo "" > deployments/l2sces-deployment.yaml
-	echo "---" >> deployments/l2sces-deployment.yaml  # Add a document separator before appending
+build-nemo: kustomize ## Generate a consolidated YAML with CRDs and deployment.
+	echo "" > deployments/nemo-deployment.yaml
+	echo "---" >> deployments/nemo-deployment.yaml  # Add a document separator before appending
 	cd config/manager && $(KUSTOMIZE) edit set image manager=${IMG}
-	$(KUSTOMIZE) build config/nemo >> deployments/l2sces-deployment.yaml
+	$(KUSTOMIZE) build config/nemo >> deployments/nemo-deployment.yaml
 
 .PHONY: build-installer
-build-installer: kustomize ## Generate a consolidated YAML with CRDs and deployment.
+build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
 	echo "" > deployments/l2sces-deployment.yaml
 	echo "---" >> deployments/l2sces-deployment.yaml  # Add a document separator before appending
-	cd config/server && $(KUSTOMIZE) edit set image server=${IMG}
+	cd config/default && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default >> deployments/l2sces-deployment.yaml
+
+.PHONY: build-codeco
+build-codeco: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
+	echo "" > deployments/codeco-deployment.yaml
+	echo "---" >> deployments/codeco-deployment.yaml  # Add a document separator before appending
+	cd config/default && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/codeco >> deployments/codeco-deployment.yaml
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.

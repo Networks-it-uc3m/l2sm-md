@@ -26,9 +26,6 @@ resources:
 # if your manager will use a service account that exists at
 # runtime. Be sure to update RoleBinding and ClusterRoleBinding
 # subjects if changing service account names.
-- service_account.yaml
-- role.yaml
-- role_binding.yaml
 - leader_election_role.yaml
 - leader_election_role_binding.yaml
 # The following RBAC configurations are used to protect
@@ -44,6 +41,9 @@ resources:
 # default, aiding admins in cluster management. Those roles are
 # not used by the l2sces-init itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
+- slicenetwork_admin_role.yaml
+- slicenetwork_editor_role.yaml
+- slicenetwork_viewer_role.yaml
 - sliceoverlay_admin_role.yaml
 - sliceoverlay_editor_role.yaml
 - sliceoverlay_viewer_role.yaml

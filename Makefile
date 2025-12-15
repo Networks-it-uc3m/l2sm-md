@@ -79,8 +79,8 @@ help: ## Display this help.
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	"$(CONTROLLER_GEN)" rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
-.PHONY: generate-controller
-generate-controller: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+.PHONY: generate
+generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	"$(CONTROLLER_GEN)" object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 
@@ -96,13 +96,11 @@ run-server:
 	go run ./cmd/server
 
 .PHONY: run
-include .env
-export $(shell sed 's/=.*//' .env)
-run: 
+run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./cmd/main.go
 
 .PHONY: build
-build: fmt vet 
+build: manifests generate fmt vet
 	go build -o $(LOCALBIN)/server ./cmd/server/
 	go build -o $(LOCALBIN)/apply-cert ./cmd/apply-cert/
 	go build -o bin/manager cmd/main.go

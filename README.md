@@ -1,6 +1,6 @@
-# L2S-M Multi Domain Client (L2S-M MD)
+# L2S-CES Layer 2 Secure Slices
 
-**L2S-M MD** is a powerful gRPC and CLI client designed to centrally manage multi-domain L2 networks and inter-cluster overlays. It simplifies complex multi-cluster network configurations, enabling efficient management of inter-cluster connectivity and L2 network resources from a single control point.
+**L2S-CES** is a powerful gRPC and CLI client designed to centrally manage multi-domain L2 networks and inter-cluster overlays. It simplifies complex multi-cluster network configurations, enabling efficient management of inter-cluster connectivity and L2 network resources from a single control point.
 
 ---
 
